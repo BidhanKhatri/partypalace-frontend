@@ -193,6 +193,7 @@ const Navbar = () => {
               searchComponent
             ) : (
               <div
+          
                 onClick={() => navigate("/search")}
                 className="w-64 flex items-center gap-3 border border-slate-600/50 bg-slate-800/40 hover:bg-slate-800/60 p-2.5 rounded-lg group-focus-within:border-orange-400 transition-all duration-300"
               >
