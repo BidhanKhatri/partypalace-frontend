@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import userContext from "../context/userContext";
 import UpdateBookingModal from "./UpdateBookingModal";
+import { FaLocationPin } from "react-icons/fa6";
 
 const ShowBooking = ({ close, isBookOpen }) => {
   const { bookingData, getBookingData, handleCancel } = useContext(userContext);
@@ -91,7 +92,7 @@ const ShowBooking = ({ close, isBookOpen }) => {
               {/* Header */}
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
                 <p className="font-semibold text-2xl text-white">
-                  Party Palace Booking Details
+                  Booking Details
                 </p>
                 <motion.span
                   whileHover={{ scale: 1.1 }}
@@ -121,10 +122,10 @@ const ShowBooking = ({ close, isBookOpen }) => {
                       variants={itemVariants}
                       className="font-semibold text-xl text-white mb-4"
                     >
-                      Party Palace Bookings
+                      Palace Bookings
                     </motion.p>
 
-                    <div className="space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
                       {bookingData?.map((el, i) => (
                         <motion.div
                           key={el?._id}
@@ -132,10 +133,10 @@ const ShowBooking = ({ close, isBookOpen }) => {
                           initial="hidden"
                           animate="visible"
                           transition={{ delay: i * 0.1 }}
-                          className="flex items-center gap-4 p-4 border border-gray-700 bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-gray-600"
+                          className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-4 p-4 border border-gray-700 bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-gray-600 w-full"
                         >
                           {/* Image */}
-                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0 mx-auto sm:mx-0">
                             <img
                               src={
                                 el.partyPalace?.images[0] ||
@@ -147,17 +148,17 @@ const ShowBooking = ({ close, isBookOpen }) => {
                           </div>
 
                           {/* Party Palace Details */}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 text-center sm:text-left">
                             <p className="text-lg font-semibold text-white truncate">
                               {el.partyPalace?.name}
                             </p>
-                            <p className="text-sm text-gray-400 truncate">
-                              {el.partyPalace?.location}
+                            <p className="text-sm text-gray-400 truncate rounded-md mt-1 flex items-center justify-center gap-1 px-2 py-1 w-fit mx-auto sm:mx-0">
+                              <FaLocationPin /> {el.partyPalace?.location}
                             </p>
                           </div>
 
                           {/* Booking Details */}
-                          <div className="flex items-center gap-4">
+                          <div className="flex flex-wrap justify-center sm:justify-start items-center gap-4 flex-1">
                             <div className="text-center">
                               <p className="text-sm text-gray-400">📅 Date</p>
                               <p className="text-xs font-medium text-white">
@@ -170,7 +171,7 @@ const ShowBooking = ({ close, isBookOpen }) => {
                             </div>
 
                             <div className="text-center">
-                              <p className="text-sm text-gray-400">Hrs</p>
+                              <p className="text-sm text-gray-400">⏱ Hrs</p>
                               <p className="text-xs font-medium text-white">
                                 {el?.hoursBooked}
                               </p>
@@ -195,39 +196,40 @@ const ShowBooking = ({ close, isBookOpen }) => {
                                 {el?.status}
                               </span>
                             </div>
+                          </div>
 
-                            <div className="flex flex-col gap-2">
-                              {/* Update button */}
-                              {el?.status !== "confirmed" && (
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => toggleUpdate(el)}
-                                  className="bg-green-600 hover:bg-green-700 cursor-pointer text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg"
-                                >
-                                  Update
-                                </motion.button>
-                              )}
-
-                              {/* Cancel Button */}
+                          {/* Buttons */}
+                          <div className="flex flex-row sm:flex-col gap-2 justify-center sm:justify-end sm:ml-auto">
+                            {/* Update Button */}
+                            {el?.status !== "confirmed" && (
                               <motion.button
-                                whileHover={{
-                                  scale: el.status !== "confirmed" ? 1.05 : 1,
-                                }}
-                                whileTap={{
-                                  scale: el.status !== "confirmed" ? 0.95 : 1,
-                                }}
-                                onClick={() => handleCancel(el._id)}
-                                disabled={el.status === "confirmed"}
-                                className={`${
-                                  el?.status === "confirmed"
-                                    ? "bg-gray-700 cursor-not-allowed text-gray-400"
-                                    : "bg-red-600 hover:bg-red-700 cursor-pointer text-white"
-                                } px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => toggleUpdate(el)}
+                                className="bg-green-600 hover:bg-green-700 cursor-pointer text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg"
                               >
-                                Cancel
+                                Update
                               </motion.button>
-                            </div>
+                            )}
+
+                            {/* Cancel Button */}
+                            <motion.button
+                              whileHover={{
+                                scale: el.status !== "confirmed" ? 1.05 : 1,
+                              }}
+                              whileTap={{
+                                scale: el.status !== "confirmed" ? 0.95 : 1,
+                              }}
+                              onClick={() => handleCancel(el._id)}
+                              disabled={el.status === "confirmed"}
+                              className={`${
+                                el?.status === "confirmed"
+                                  ? "bg-gray-700 cursor-not-allowed text-gray-400"
+                                  : "bg-red-600 hover:bg-red-700 cursor-pointer text-white"
+                              } px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg`}
+                            >
+                              Cancel
+                            </motion.button>
                           </div>
                         </motion.div>
                       ))}

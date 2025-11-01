@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { TypeAnimation } from "react-type-animation";
+import { FaListCheck } from "react-icons/fa6";
+import { FaCalendarAlt } from "react-icons/fa";
 
 const HeroSection = () => {
   const [category, setCategory] = useState([]);
@@ -191,7 +193,7 @@ const HeroSection = () => {
                 {/* Category */}
                 <div className="md:col-span-4 w-full min-w-0">
                   <label className="block text-xs sm:text-sm font-semibold text-slate-200 mb-2 sm:mb-3 uppercase tracking-wide">
-                    Event Category
+                    <FaListCheck className="inline-block mr-1" /> Event Category
                   </label>
                   <select
                     className="w-full bg-slate-800/80 border border-slate-600 text-white text-sm sm:text-base px-3 sm:px-4 py-3 rounded-lg focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 transition-all appearance-none"
@@ -211,7 +213,7 @@ const HeroSection = () => {
                 {/* Date */}
                 <div className="md:col-span-4 w-full min-w-0">
                   <label className="block text-xs sm:text-sm font-semibold text-slate-200 mb-2 sm:mb-3 uppercase tracking-wide">
-                    Event Date
+                    <FaCalendarAlt className="inline-block mr-1" /> Event Date
                   </label>
                   <div className="w-full overflow-hidden rounded-lg bg-slate-800/80 border border-slate-600">
                     <input
