@@ -1,5 +1,4 @@
 import axios from "axios";
-import { set } from "mongoose";
 import React, { useState } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -42,7 +41,7 @@ const Signup = () => {
         toast.success(res.data.msg);
 
         setTimeout(() => {
-          navigate("/login")
+          navigate("/login");
         }, 100);
 
         console.log(res.data);
