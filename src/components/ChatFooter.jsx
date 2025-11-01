@@ -3,7 +3,6 @@ import { FiSend } from "react-icons/fi";
 import { MdAttachFile } from "react-icons/md";
 import { useParams } from "react-router-dom";
 import userContext from "../context/userContext";
-import { set } from "mongoose";
 
 const ChatFooter = () => {
   const [text, setText] = useState("");
