@@ -209,7 +209,7 @@ const HeroSection = () => {
                 </div>
 
                 {/* Date */}
-                <div className="md:col-span-4">
+                <div className="md:col-span-4 w-full min-w-0">
                   <label className="block text-xs sm:text-sm font-semibold text-slate-200 mb-2 sm:mb-3 uppercase tracking-wide">
                     Event Date
                   </label>
@@ -217,7 +217,7 @@ const HeroSection = () => {
                     type="date"
                     name="targetedDate"
                     id="checkin"
-                    className="w-full bg-slate-800/80 border border-slate-600 text-white text-sm sm:text-base px-3 sm:px-4 py-3 rounded-lg focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 transition-all"
+                    className="w-full min-w-0 bg-slate-800/80 border border-slate-600 text-white text-sm sm:text-base px-3 sm:px-4 py-3 rounded-lg focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 transition-all"
                     onChange={handleChange}
                   />
                 </div>
