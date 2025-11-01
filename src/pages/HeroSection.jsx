@@ -144,20 +144,20 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 md:px-8 py-8">
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 py-8">
         {/* Header Section */}
-        <div className="text-center mb-8 max-w-2xl">
+        <div className="text-center mb-8 max-w-full sm:max-w-xl md:max-w-2xl px-2">
           <div className="inline-block mb-3 px-3 py-1.5 bg-slate-800/50 border border-slate-700 rounded-full">
-            <p className="text-xs font-medium text-slate-300 tracking-wide uppercase">
+            <p className="text-xs sm:text-sm font-medium text-slate-300 tracking-wide uppercase">
               Premium Event Solutions
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-1 leading-tight tracking-tight whitespace-nowrap">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-1 leading-tight tracking-tight whitespace-normal sm:whitespace-nowrap">
               Discover Your Perfect
             </h1>
-            <span className="text-slate-400 font-bold min-w-[11rem]">
+            <span className="text-slate-400 font-bold min-w-[10rem] sm:min-w-[11rem] mt-1 sm:mt-0">
               <TypeAnimation
                 sequence={[
                   "Venues",
@@ -172,29 +172,29 @@ const HeroSection = () => {
                 wrapper="span"
                 speed={50}
                 repeat={Infinity}
-                className="text-slate-400 inline-block"
-                style={{ fontSize: "2.7rem" }}
+                className="text-slate-400 inline-block text-[1.8rem] sm:text-[2.7rem] "
               />
             </span>
           </div>
-          <p className="text-sm md:text-base text-slate-400 font-light leading-relaxed">
+
+          <p className="text-sm sm:text-base text-slate-400 font-light leading-relaxed mt-3 px-2 sm:px-0">
             Browse and book from the finest party palaces and celebration
             spaces.
           </p>
         </div>
 
         {/* Search Form Card */}
-        <div className="w-full max-w-4xl mx-auto mb-8">
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 md:p-8 shadow-2xl">
+        <div className="w-full max-w-full sm:max-w-3xl md:max-w-4xl mx-auto mb-8 px-2">
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl">
             <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-4 items-end">
                 {/* Category */}
                 <div className="md:col-span-4">
-                  <label className="block text-xs md:text-sm font-semibold text-slate-200 mb-3 uppercase tracking-wide">
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-200 mb-2 sm:mb-3 uppercase tracking-wide">
                     Event Category
                   </label>
                   <select
-                    className="w-full bg-slate-800/80 border border-slate-600 text-white text-sm md:text-base px-4 py-3.5 rounded-lg focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 transition-all"
+                    className="w-full bg-slate-800/80 border border-slate-600 text-white text-sm sm:text-base px-3 sm:px-4 py-3 rounded-lg focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 transition-all"
                     name="category"
                     id="category"
                     onChange={handleChange}
@@ -210,14 +210,14 @@ const HeroSection = () => {
 
                 {/* Date */}
                 <div className="md:col-span-4">
-                  <label className="block text-xs md:text-sm font-semibold text-slate-200 mb-3 uppercase tracking-wide">
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-200 mb-2 sm:mb-3 uppercase tracking-wide">
                     Event Date
                   </label>
                   <input
                     type="date"
                     name="targetedDate"
                     id="checkin"
-                    className="w-full bg-slate-800/80 border border-slate-600 text-white text-sm md:text-base px-4 py-3.5 rounded-lg focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 transition-all"
+                    className="w-full bg-slate-800/80 border border-slate-600 text-white text-sm sm:text-base px-3 sm:px-4 py-3 rounded-lg focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 transition-all"
                     onChange={handleChange}
                   />
                 </div>
@@ -226,7 +226,7 @@ const HeroSection = () => {
                 <div className="md:col-span-4">
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-semibold text-sm md:text-base px-6 py-3.5 rounded-lg transition-all duration-300 border border-slate-600 hover:border-slate-500 shadow-lg hover:shadow-xl active:scale-95"
+                    className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-semibold text-sm sm:text-base px-6 py-3 rounded-lg transition-all duration-300 border border-slate-600 hover:border-slate-500 shadow-lg hover:shadow-xl active:scale-95"
                   >
                     Search Venues
                   </button>
@@ -236,7 +236,7 @@ const HeroSection = () => {
           </div>
 
           {/* Help Text */}
-          <p className="text-center text-slate-500 text-xs mt-4">
+          <p className="text-center text-slate-500 text-xs mt-4 px-2 sm:px-0">
             Select a category and date to explore available venues for your
             event
           </p>
