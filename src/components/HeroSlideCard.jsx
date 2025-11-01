@@ -4,7 +4,7 @@ import Banner2 from "../assets/images/banner2.jpg";
 const HeroSlideCard = ({ data }) => {
   return (
     <div
-      className="bg-white/60 backdrop-blur-2xl h-44 rounded-md overflow-hidden shadow-md relative "
+      className="bg-white/60 backdrop-blur-2xl h-56 rounded-md overflow-hidden shadow-md relative "
     
     >
       <div className="absolute inset-0 z-10 h-8 w-1.5 bg-gradient-to-b from-orange-400 via-amber-500 to-orange-600 rounded-b-full" />

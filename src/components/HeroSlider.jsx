@@ -11,10 +11,7 @@ const HeroSlider = () => {
   const { partypalace } = useSelector((state) => state?.partypalace);
 
   return (
-    <div
-      className="bg-black py-8 relative border-t-2 border-b-2 border-transparent bg-clip-padding"
-  
-    >
+    <div className="relative border-t-2 border-b-2 border-transparent bg-clip-padding">
       <Swiper
         spaceBetween={16}
         slidesPerView={1}
@@ -32,7 +29,7 @@ const HeroSlider = () => {
       >
         {partypalace.length > 0 &&
           partypalace.map((pp, i) => (
-            <SwiperSlide key={i} className="px-2 py-4 flex justify-center" >
+            <SwiperSlide key={i} className=" py-4 flex justify-center">
               <HeroSlideCard data={pp} />
             </SwiperSlide>
           ))}

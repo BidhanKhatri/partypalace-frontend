@@ -3,7 +3,7 @@ import HeroSlider from "../components/HeroSlider";
 
 const SubHeroSection = () => {
   return (
-    <div className=" h-44 min-h-56 -mt-22 sm:-mt-26 px-3 ">
+    <div className="  min-h-64 -mt-20 px-3 ">
       <HeroSlider />
     </div>
   );
