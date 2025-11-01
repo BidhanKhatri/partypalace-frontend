@@ -51,7 +51,7 @@ const Review = () => {
   }, [dispatch]);
 
   return (
-    <section className="bg-neutral-900 w-full rounded-2xl p-6 max-w-7xl mx-auto shadow-lg border border-neutral-800">
+    <section className="bg-neutral-900 w-full rounded-2xl p-4 lg:p-6 max-w-7xl mx-auto shadow-lg border border-neutral-800">
       <p className="font-bold text-2xl tracking-wider text-white">
         Customer Reviews
       </p>
@@ -120,7 +120,7 @@ const Review = () => {
         />
 
         {/* Star Rating + Submit */}
-        <div className="flex items-center justify-between mt-5">
+        <div className="flex flex-col items-center justify-center gap-4 mt-5 lg:flex-row lg:justify-between">
           <div className="flex gap-2">
             {[...Array(5)].map((_, index) => {
               const currentRating = index + 1;
