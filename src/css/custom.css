@@ -1,0 +1,36 @@
+.swiper-button-next, .swiper-button-prev {
+    color: #FBAD34 !important; /* Change color */
+    
+  }
+
+  
+.poppins-semibold {
+    font-family: "Poppins", serif;
+    font-weight: 600;
+    font-style: normal;
+  }
+
+
+  /* ----- path animation: clockwise around the square ----- */
+@keyframes search-path {
+  0%   { transform: translate(0%, 0%);   }
+  25%  { transform: translate(10%, 0%); }   /* left → top */
+  50%  { transform: translate(10%, 10%); } /* top → right */
+  75%  { transform: translate(0%, 10%); }   /* right → bottom */
+  100% { transform: translate(0%, 0%);   }   /* bottom → left (loop) */
+}
+
+.animate-search-path {
+  animation: search-path 2.5s linear infinite;
+}
+
+/* ----- slow, gentle spin of the glass itself ----- */
+@keyframes spin-slow {
+  100% { transform: rotate(90deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+
