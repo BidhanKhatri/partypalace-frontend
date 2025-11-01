@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,6 +9,7 @@ import { IoIosCreate } from "react-icons/io";
 import { GiIndianPalace } from "react-icons/gi";
 import { FaBell, FaMessage } from "react-icons/fa6";
 import adminContext from "../context/adminContext";
+import api from "../utils/apiInstance";
 
 const AdminNavbar = () => {
   const location = useLocation();
@@ -19,7 +19,7 @@ const AdminNavbar = () => {
 
   async function handleLogout() {
     try {
-      const res = await axios.get("/proxy/api/user/logout");
+      const res = await api.get("/api/user/logout");
 
       if (res && res.data.success) {
         toast.success(res.data.msg);

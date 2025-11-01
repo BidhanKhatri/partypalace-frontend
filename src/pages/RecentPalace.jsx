@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import VenueCard from "../components/VenueCard";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import { useDispatch, useSelector } from "react-redux";
 import { setPartyPalace } from "../redux/features/partypalaceSlice";
 import SubHeading from "../components/SubHeading";
@@ -22,7 +22,7 @@ const RecentPalace = () => {
   const handleLike = async (partyPalaceId) => {
     try {
       const payload = { partyPalaceId, incLikes: isLiked ? -1 : 1 };
-      const res = await axios.put("/proxy/api/partypalace/like", payload);
+      const res = await api.put("/api/partypalace/like", payload);
       if (res && res.data.success) {
         fetchAllPartyPalace();
         toast.success(res.data.msg);
@@ -35,7 +35,7 @@ const RecentPalace = () => {
   const fetchAllPartyPalace = async () => {
     if (!token) return;
     try {
-      const res = await axios.get("/proxy/api/partypalace/get-all");
+      const res = await api.get("/api/partypalace/get-all");
       if (res && res.data.success) {
         dispatch(setPartyPalace(res.data.data));
         console.log(res.data.data);

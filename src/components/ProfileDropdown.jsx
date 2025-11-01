@@ -3,7 +3,7 @@ import { FaArrowLeft, FaUser } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import Banner1 from "../assets/images/user.jpeg";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { logout } from "../redux/features/userSlice";
@@ -28,7 +28,7 @@ const ProfileDropdown = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await axios.get("/proxy/api/user/logout");
+      const res = await api.get("/api/user/logout");
 
       if (res && res.data.success) {
         toast.success(res.data.msg);

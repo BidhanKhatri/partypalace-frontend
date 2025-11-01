@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../utils/apiInstance";
 import React, { useContext, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -97,8 +97,8 @@ const UpdatePPImgModal = ({ partyPalaceId, close }) => {
 
       setLoading(true);
 
-      const res = await axios.put(
-        "/proxy/api/partypalace/updateImages",
+      const res = await api.put(
+        "/api/partypalace/updateImages",
         formData,
         config
       );

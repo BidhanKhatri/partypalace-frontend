@@ -5,8 +5,8 @@ import {
   setPartyPalace,
   setReviews,
 } from "../redux/features/partypalaceSlice";
-import axios from "axios";
 import { toast } from "react-toastify";
+import api from "../utils/apiInstance";
 
 const userContext = createContext();
 
@@ -37,7 +37,7 @@ export const UserProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
       };
-      const res = await axios.get("/proxy/api/booking/get", config);
+      const res = await api.get("/api/booking/get", config);
       if (res && res.data.success) {
         setBookingData(res.data.data);
         dispatch(setBookedPartyPalaceLength(res.data.data.length));
@@ -52,7 +52,7 @@ export const UserProvider = ({ children }) => {
   const fetchAllPartyPalace = async () => {
     if (!token) return;
     try {
-      const res = await axios.get("/proxy/api/partypalace/get-all");
+      const res = await api.get("/api/partypalace/get-all");
       if (res && res.data.success) {
         dispatch(setPartyPalace(res.data.data));
       }
@@ -69,10 +69,7 @@ export const UserProvider = ({ children }) => {
       },
     };
     try {
-      const res = await axios.delete(
-        `/proxy/api/booking/cancel/${bookingId}`,
-        config
-      );
+      const res = await api.delete(`/api/booking/cancel/${bookingId}`, config);
       if (res && res.data.success) {
         toast.success(res.data.msg);
         getBookingData();
@@ -87,8 +84,8 @@ export const UserProvider = ({ children }) => {
   const getSearchData = async (search, page = 1) => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        `/proxy/api/partypalace/get-all?page=${page}&limit=12`,
+      const res = await api.get(
+        `/api/partypalace/get-all?page=${page}&limit=12`,
         {
           params: { search },
         }
@@ -118,7 +115,7 @@ export const UserProvider = ({ children }) => {
         },
       };
       setLoading(true);
-      const res = await axios.patch("/proxy/api/booking/update", data, config);
+      const res = await api.patch("/api/booking/update", data, config);
       if (res.data && res.data.success) {
         toast.success(res.data.msg);
         await getBookingData();
@@ -135,7 +132,7 @@ export const UserProvider = ({ children }) => {
   const sendMessage = async (data) => {
     try {
       setLoading(true);
-      const res = await axios.post("/proxy/api/message/sendMyMessage", data);
+      const res = await api.post("/api/message/sendMyMessage", data);
       if (res.data && res.data.success) {
         toast.success(res.data.msg);
       }
@@ -151,8 +148,8 @@ export const UserProvider = ({ children }) => {
   const getMessage = async (receiverId) => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        `/proxy/api/message/getMessage?receiverId=${receiverId}`
+      const res = await api.get(
+        `/api/message/getMessage?receiverId=${receiverId}`
       );
       if (res.data && res.data.success) {
         setMessage(res.data.data);
@@ -175,11 +172,7 @@ export const UserProvider = ({ children }) => {
       };
 
       setLoading(true);
-      const res = await axios.post(
-        `/proxy/api/partypalace/byFilter`,
-        payload,
-        config
-      );
+      const res = await api.post(`/api/partypalace/byFilter`, payload, config);
       if (res.data && res.data.success) {
         setSearchData(res.data.data);
       }
@@ -201,8 +194,8 @@ export const UserProvider = ({ children }) => {
         },
       };
 
-      const res = await axios.get(
-        `/proxy/api/partypalace/getByCategory?category=${category}&page=${page}`,
+      const res = await api.get(
+        `/api/partypalace/getByCategory?category=${category}&page=${page}`,
         config
       );
       if (res.data && res.data.success) {
@@ -235,7 +228,7 @@ export const UserProvider = ({ children }) => {
         },
       };
       setLoading(true);
-      const res = await axios.get("/proxy/api/partypalace/topLiked", config);
+      const res = await api.get("/api/partypalace/topLiked", config);
       if (res.data && res.data.success) {
         setTopLiked(res.data.data);
       }
@@ -249,7 +242,7 @@ export const UserProvider = ({ children }) => {
   //get all category
   const getAllCategory = async () => {
     try {
-      const res = await axios.get("/proxy/api/global/category/get");
+      const res = await api.get("/api/global/category/get");
 
       if (res.data && Array.isArray(res.data.data)) {
         setAllCategory(res.data.data);
@@ -272,7 +265,7 @@ export const UserProvider = ({ children }) => {
 
       setLoading(true);
 
-      const res = await axios.post("/proxy/api/review/create", data, config);
+      const res = await api.post("/api/review/create", data, config);
       if (res.data && res.data.success) {
         toast.success(res.data.msg);
       }
@@ -294,8 +287,8 @@ export const UserProvider = ({ children }) => {
       };
 
       setLoading(true);
-      const res = await axios.get(
-        `/proxy/api/review/getReview?partyPalaceId=${partyPalaceId}`,
+      const res = await api.get(
+        `/api/review/getReview?partyPalaceId=${partyPalaceId}`,
         config
       );
       if (res.data && res.data.success) {
@@ -327,8 +320,8 @@ export const UserProvider = ({ children }) => {
         page,
       };
 
-      const res = await axios.post(
-        `/proxy/api/partypalace/get-by-category-date`,
+      const res = await api.post(
+        `/api/partypalace/get-by-category-date`,
         payload,
         config
       );

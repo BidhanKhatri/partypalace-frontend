@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { toast } from "react-toastify";
-import axios from "axios";
+import api from "../utils/apiInstance";
 
 const CameraManBookingModal = ({ cameraMan, onClose }) => {
   console.log("selected cameraman", cameraMan);
@@ -43,7 +43,7 @@ const CameraManBookingModal = ({ cameraMan, onClose }) => {
       if (formData.eventDate === "") {
         return toast.error("Please select a date");
       } else {
-        const res = await axios.post("/proxy/api/cameraman/book-cameraman", {
+        const res = await api.post("/api/cameraman/book-cameraman", {
           cameramanId: cameraMan._id,
           bookingDate: formData.eventDate,
         });

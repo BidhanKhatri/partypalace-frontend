@@ -5,7 +5,7 @@ import { Camera, Phone, Mail, Award, Calendar } from "lucide-react";
 import { FaArrowLeft } from "react-icons/fa6";
 import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import { toast } from "react-toastify";
 
 // Custom marker icon
@@ -51,7 +51,7 @@ const CameraManMapView = () => {
   // api call to get all camera man
   const getAllCameraMan = async () => {
     try {
-      const res = await axios.get("/proxy/api/cameraman/get-all");
+      const res = await api.get("/api/cameraman/get-all");
 
       if (res && res.data.success) {
         setCameraManData(res.data.data);
@@ -91,7 +91,7 @@ const CameraManMapView = () => {
                 {cameraManData.length} cameramen available
               </p>
             </div>
-          </div>  
+          </div>
         </div>
 
         {/* Map Container - Full screen with proper overflow handling */}

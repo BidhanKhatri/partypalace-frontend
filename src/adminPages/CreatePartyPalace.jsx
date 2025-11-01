@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import adminContext from "../context/adminContext";
 import userContext from "../context/userContext";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import { toast } from "react-toastify";
 
 const CreatePartyPalace = () => {
@@ -161,8 +161,8 @@ const CreatePartyPalace = () => {
 
   //     setLoading(true);
 
-  //     const res = await axios.put(
-  //       "/proxy/api/partypalace/updateImages",
+  //     const res = await api.put(
+  //       "/api/partypalace/updateImages",
   //       formData,
   //       config
   //     );
@@ -202,11 +202,7 @@ const CreatePartyPalace = () => {
         },
       };
 
-      const res = await axios.post(
-        "/proxy/api/partypalace/create",
-        formData,
-        config
-      );
+      const res = await api.post("/api/partypalace/create", formData, config);
 
       if (res && res.data && res.data.success) {
         toast.success(res.data.msg);

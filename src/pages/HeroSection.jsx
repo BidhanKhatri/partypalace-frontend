@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useState } from "react";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -20,7 +20,7 @@ const HeroSection = () => {
 
   const getCategory = async () => {
     try {
-      const res = await axios.get("/proxy/api/global/category/get");
+      const res = await api.get("/api/global/category/get");
       if (res.data.success) {
         setCategory(res.data.data);
       }
@@ -55,8 +55,8 @@ const HeroSection = () => {
     };
 
     try {
-      const res = await axios.post(
-        "/proxy/api/partypalace/get-by-category-date",
+      const res = await api.post(
+        "/api/partypalace/get-by-category-date",
         searchData,
         config
       );

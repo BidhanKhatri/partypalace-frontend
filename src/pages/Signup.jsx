@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../utils/apiInstance";
 import React, { useState } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +36,7 @@ const Signup = () => {
     // Your existing login logic would go here
     try {
       setLoading(true);
-      const res = await axios.post("/proxy/api/user/signup", data);
+      const res = await api.post("/api/user/signup", data);
       if (res && res.data.success) {
         toast.success(res.data.msg);
 

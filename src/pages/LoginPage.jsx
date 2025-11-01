@@ -10,7 +10,7 @@ import {
   Shield,
   Users,
 } from "lucide-react";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -50,7 +50,7 @@ const LoginPage = () => {
       const code = authResponse.code;
 
       // Send the code to your backend for token exchange
-      const res = await axios.get(`/proxy/api/user/login/google?code=${code}`, {
+      const res = await api.get(`/api/user/login/google?code=${code}`, {
         withCredentials: true, // so cookies are handled correctly
       });
 
@@ -88,7 +88,7 @@ const LoginPage = () => {
     // Your existing login logic would go here
     try {
       e.preventDefault();
-      const res = await axios.post("/proxy/api/user/login", data);
+      const res = await api.post("/api/user/login", data);
       if (res && res.data.success) {
         toast.success(res.data.msg);
         dispatch(login(res.data));

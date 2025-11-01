@@ -1,7 +1,7 @@
-import axios from "axios";
 import { createContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import api from "../utils/apiInstance";
 import { setMyPartyPalace } from "../redux/features/partypalaceSlice";
 
 const adminContext = createContext(null);
@@ -24,11 +24,7 @@ export const AdminContextProvider = ({ children }) => {
       };
       setLoading(true);
 
-      const res = await axios.post(
-        "/proxy/api/partypalace/create",
-        data,
-        config
-      );
+      const res = await api.post("/api/partypalace/create", data, config);
       if (res.data && res.data.success) {
         toast.success(res.data.msg);
       }
@@ -50,8 +46,8 @@ export const AdminContextProvider = ({ children }) => {
       };
       setLoading(true);
 
-      const res = await axios.post(
-        "/proxy/api/admin/get-my-partypalace",
+      const res = await api.post(
+        "/api/admin/get-my-partypalace",
         { createdBy: userId },
         config
       );
@@ -78,8 +74,8 @@ export const AdminContextProvider = ({ children }) => {
       };
       setLoading(true);
 
-      const res = await axios.delete(
-        `/proxy/api/partypalace/delete?partyPalaceId=${partyPalaceId}`,
+      const res = await api.delete(
+        `/api/partypalace/delete?partyPalaceId=${partyPalaceId}`,
         config
       );
       if (res.data && res.data.success) {
@@ -103,11 +99,7 @@ export const AdminContextProvider = ({ children }) => {
         },
       };
       setLoading(true);
-      const res = await axios.patch(
-        "/proxy/api/partypalace/update",
-        data,
-        config
-      );
+      const res = await api.patch("/api/partypalace/update", data, config);
       if (res.data && res.data.success) {
         toast.success(res.data.msg);
         getMyPartyPalace();
@@ -129,8 +121,8 @@ export const AdminContextProvider = ({ children }) => {
         },
       };
 
-      const res = await axios.get(
-        `/proxy/api/admin/get-bookings?partyPalaceId=${partyPalaceId}`,
+      const res = await api.get(
+        `/api/admin/get-bookings?partyPalaceId=${partyPalaceId}`,
         config
       );
 
@@ -157,8 +149,8 @@ export const AdminContextProvider = ({ children }) => {
       };
 
       const { bookingId, status } = data;
-      const res = await axios.put(
-        "/proxy/api/admin/update-status",
+      const res = await api.put(
+        "/api/admin/update-status",
         { bookingId, status },
         config
       );
@@ -182,8 +174,8 @@ export const AdminContextProvider = ({ children }) => {
         },
       };
 
-      const res = await axios.get(
-        `/proxy/api/message/getLeftMessagesAdmin?createdBy=${userId}`,
+      const res = await api.get(
+        `/api/message/getLeftMessagesAdmin?createdBy=${userId}`,
         config
       );
       if (res.data && res.data.success) {

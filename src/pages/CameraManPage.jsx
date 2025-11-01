@@ -15,7 +15,7 @@ import {
 
 import { FaLocationDot, FaMap } from "react-icons/fa6";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import CameraManBookingModal from "../components/CameraManBookingModal";
 
 const CameraManPage = () => {
@@ -36,7 +36,7 @@ const CameraManPage = () => {
   const getAllCameraMan = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("/proxy/api/cameraman/get-all");
+      const res = await api.get("/api/cameraman/get-all");
 
       if (res && res.data.success) {
         setCameraManData(res.data.data);

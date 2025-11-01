@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import { setSelectedPartyPalace } from "../redux/features/partypalaceSlice";
-import axios from "axios";
+import api from "../utils/apiInstance";
 import DatePicker from "react-datepicker";
 import { setSelectedChat } from "../redux/features/userSlice";
 import "react-datepicker/dist/react-datepicker.css";
@@ -44,7 +44,7 @@ const BookingPage = () => {
 
   const fetchOnlyOne = async () => {
     try {
-      const res = await axios.get(`/proxy/api/partypalace/get-one/${id}`);
+      const res = await api.get(`/api/partypalace/get-one/${id}`);
       if (res && res.data.success) {
         dispatch(setSelectedPartyPalace(res.data.data));
       }
@@ -71,8 +71,8 @@ const BookingPage = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-      const res = await axios.post(
-        "/proxy/api/booking/create",
+      const res = await api.post(
+        "/api/booking/create",
         payload,
         config
       );
