@@ -65,6 +65,8 @@ const PartyPalaceLogo = () => (
       fontSize="14"
       fontWeight="bold"
       fill="url(#logoGradient)"
+      stroke="#ea580c"
+      strokeWidth="0.5"
       letterSpacing="0.5"
     >
       PARTY PALACE
@@ -336,7 +338,7 @@ const Navbar = () => {
           <FaStar className="text-sm" /> Reviews
         </a>
         <div className="lg:hidden py-3 px-6">
-          <ProfileDropdown /> 
+          <ProfileDropdown />
         </div>
       </div>
     </nav>
