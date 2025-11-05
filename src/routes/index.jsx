@@ -24,6 +24,8 @@ import CameraManMapView from "../components/CameraManMapView";
 import QuickSearchPage from "../pages/QuickSearchPage";
 import Signup from "../pages/Signup";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import PartypalaceMapLayout from "../layouts/PartypalaceMapLayout";
+import PartyPalaceMap from "../components/PartyPalaceMap";
 
 const GoogleAuthWrapper = () => {
   return (
@@ -65,6 +67,11 @@ const router = createBrowserRouter([
       {
         path: "/quick-search",
         element: <QuickSearchPage />,
+      },
+      {
+        path: "/map",
+        element: <PartypalaceMapLayout />,
+        children: [{ path: "", element: <PartyPalaceMap /> }],
       },
     ],
   },

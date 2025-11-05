@@ -16,6 +16,8 @@ import { IoLocationSharp } from "react-icons/io5";
 import {
   FaArrowLeft,
   FaBookBookmark,
+  FaLocationPin,
+  FaMapLocation,
   FaScrewdriver,
   FaScrewdriverWrench,
   FaUser,
@@ -169,12 +171,19 @@ const Navbar = () => {
               Home
             </Link>
 
-            <Link
+            {/* <Link
               to={"/cameraman"}
               className="py-3 px-3 text-sm font-medium hover:text-orange-400 transition duration-300 cursor-pointer flex items-center gap-2 text-slate-300"
             >
               <FaCamera className="text-sm" />
               CameraMan
+            </Link> */}
+            <Link
+              to={"/map"}
+              className="py-3 px-3 text-sm font-medium hover:text-orange-400 transition duration-300 cursor-pointer flex items-center gap-2 text-slate-300"
+            >
+              <FaLocationPin className="text-sm" />
+              Open Map
             </Link>
             <a className="py-3 px-3 text-sm font-medium hover:text-orange-400 transition duration-300 cursor-pointer flex items-center gap-2 text-slate-300">
               <FaPhoneVolume className="text-sm" />
@@ -193,7 +202,6 @@ const Navbar = () => {
               searchComponent
             ) : (
               <div
-          
                 onClick={() => navigate("/search")}
                 className="w-64 flex items-center gap-3 border border-slate-600/50 bg-slate-800/40 hover:bg-slate-800/60 p-2.5 rounded-lg group-focus-within:border-orange-400 transition-all duration-300"
               >
@@ -326,17 +334,19 @@ const Navbar = () => {
           <FaHome className="text-sm" /> Home
         </Link>
         <Link
-          to={"/cameraman"}
+          to={"/map"}
           onClick={() => setIsOpen(false)}
           className="py-3 px-6 text-sm font-medium hover:bg-slate-700/50 hover:text-orange-400 flex items-center gap-3 text-slate-300 transition-all"
         >
-          <FaCamera className="text-sm" /> CameraMan
+          <FaLocationPin className="text-sm" />
+          Open Map
         </Link>
+
         <a className="py-3 px-6 text-sm font-medium hover:bg-slate-700/50 hover:text-orange-400 flex items-center gap-3 text-slate-300 transition-all cursor-pointer">
           <FaPhoneVolume className="text-sm" /> Contact
         </a>
         <a className="py-3 px-6 text-sm font-medium hover:bg-slate-700/50 hover:text-orange-400 flex items-center gap-3 text-slate-300 transition-all cursor-pointer">
-          <FaStar className="text-sm" /> Reviews
+          <FaStar className="text-sm" /> Review
         </a>
         <div className="lg:hidden py-3 px-6">
           <ProfileDropdown />

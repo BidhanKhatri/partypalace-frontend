@@ -4,6 +4,23 @@ import userContext from "../context/userContext";
 import { useSelector } from "react-redux";
 import api from "../utils/apiInstance";
 import { toast } from "react-toastify";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix for Leaflet marker icons
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+const defaultMarkerIcon = L.icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = defaultMarkerIcon;
 
 const CreatePartyPalace = () => {
   const [data, setData] = useState({
@@ -13,29 +30,110 @@ const CreatePartyPalace = () => {
     capacity: "",
     pricePerHour: "",
     category: [],
+    coordinates: null,
   });
 
-  console.log("create pp", data);
   const [selectedCategory, setSelectedCategory] = useState([]);
-  const [successMessage, setSuccessMessage] = useState(""); // Success feedback
+  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // console.log(data);
   const fileInputRef = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
   const [isDragging, setIsDragging] = useState(false);
   const [image, setImage] = useState([]);
+  const [showMapModal, setShowMapModal] = useState(false);
 
   const { addPartyPalace, loading } = useContext(adminContext);
   const { getAllCategory, allCategory } = useContext(userContext);
   const { token } = useSelector((state) => state?.user);
 
+  // Initialize map on component mount
   useEffect(() => {
     getAllCategory();
   }, []);
 
+  // Separate useEffect for map initialization with delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapRef.current && !mapInstanceRef.current) {
+        initializeMap();
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [showMapModal]);
+
+  const initializeMap = () => {
+    if (!mapRef.current) return;
+
+    // Default location: Nepal center (Kathmandu area)
+    const defaultLat = 27.7172;
+    const defaultLng = 85.324;
+
+    const map = L.map(mapRef.current).setView([defaultLat, defaultLng], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Add draggable marker
+    const marker = L.marker([defaultLat, defaultLng], {
+      draggable: true,
+      icon: defaultMarkerIcon,
+    }).addTo(map);
+
+    marker.bindPopup("Drag me to your party palace location");
+
+    // Handle marker drag
+    marker.on("dragend", () => {
+      const position = marker.getLatLng();
+      updateCoordinates(position.lng, position.lat);
+    });
+
+    // Handle map click to place marker
+    map.on("click", (e) => {
+      marker.setLatLng(e.latlng);
+      updateCoordinates(e.latlng.lng, e.latlng.lat);
+    });
+
+    markerRef.current = marker;
+    mapInstanceRef.current = map;
+  };
+
+  // Handle map resize when toggling expand/collapse
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      // Multiple calls to ensure it registers
+
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 100);
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 350);
+    }
+  }, [showMapModal]);
+
+  const updateCoordinates = (lng, lat) => {
+    setData((prev) => ({
+      ...prev,
+      coordinates: [lng, lat],
+    }));
+  };
+
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-
     const newValue = type === "number" ? parseInt(value) : value;
     setData((prev) => ({
       ...prev,
@@ -44,26 +142,22 @@ const CreatePartyPalace = () => {
   };
 
   const isAllFills = Object.values(data).every(
-    (el) => el !== "" && el.length !== 0
+    (el) => el !== "" && el.length !== 0 && el !== null
   );
 
   const handleCategoryChange = (e) => {
     const { value } = e.target;
-
-    // Find the selected category object by its ID
     const foundData = allCategory.find((el) => el._id === value);
 
-    // Update selectedCategory, checking for duplicates
     setSelectedCategory((prev) => {
       const isAlreadySelected = prev.some((el) => el._id === foundData._id);
-      if (isAlreadySelected) return prev; // Skip if duplicate
-      return [...prev, foundData]; // Add the new category
+      if (isAlreadySelected) return prev;
+      return [...prev, foundData];
     });
 
-    // Update the `data.category` field
     setData((prev) => {
       const isAlreadyInData = prev.category.includes(foundData.name);
-      if (isAlreadyInData) return prev; // Skip if duplicate
+      if (isAlreadyInData) return prev;
       return {
         ...prev,
         category: [...prev.category, foundData.name],
@@ -79,55 +173,12 @@ const CreatePartyPalace = () => {
     }));
   };
 
-  //new logic from here
   function handleBrowseClick() {
     fileInputRef.current.click();
   }
 
   function handleFlieChange(e) {
     const { files } = e.target;
-    if (files.length === 0) return;
-
-    for (let i = 0; i < files.length; i++) {
-      if (files[i].type.split("/")[0] !== "image") continue;
-      if (!image.some((e) => e.name === files[i].name)) {
-        setImage((prevImg) => {
-          const updatedImages = [
-            ...prevImg,
-            {
-              name: files[i].name,
-              url: URL.createObjectURL(files[i]), // This is for displaying image in frontend
-              imgFile: files[i], // This is for sending image to backend
-            },
-          ];
-          return updatedImages;
-        });
-      }
-    }
-  }
-
-  function handleRemove(index) {
-    setImage((prevImg) => prevImg.filter((_, i) => i !== index));
-  }
-
-  //drag events to handle drag and drop image feature (core JS concept)
-  function onDragOver(event) {
-    event.preventDefault();
-    setIsDragging(true);
-    event.dataTransfer.dropEffect = "copy";
-  }
-
-  function onDragLeave(event) {
-    event.preventDefault();
-    setIsDragging(false);
-  }
-
-  function onDrop(event) {
-    event.preventDefault();
-    setIsDragging(false);
-    const files = event.dataTransfer.files;
-
-    //same logic copy pasted from handleFlieChange
     if (files.length === 0) return;
 
     for (let i = 0; i < files.length; i++) {
@@ -144,41 +195,43 @@ const CreatePartyPalace = () => {
       }
     }
   }
-  // const handleImageUpload = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const formData = new FormData();
 
-  //     formData.append("partyPalaceId", partyPalaceId);
-  //     image.length > 0 &&
-  //       image.map((im, i) => formData.append("images", im.imgFile));
+  function handleRemove(index) {
+    setImage((prevImg) => prevImg.filter((_, i) => i !== index));
+  }
 
-  //     const config = {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     };
+  function onDragOver(event) {
+    event.preventDefault();
+    setIsDragging(true);
+    event.dataTransfer.dropEffect = "copy";
+  }
 
-  //     setLoading(true);
+  function onDragLeave(event) {
+    event.preventDefault();
+    setIsDragging(false);
+  }
 
-  //     const res = await api.put(
-  //       "/api/partypalace/updateImages",
-  //       formData,
-  //       config
-  //     );
+  function onDrop(event) {
+    event.preventDefault();
+    setIsDragging(false);
+    const files = event.dataTransfer.files;
 
-  //     if (res.data && res.data.success) {
-  //       toast.success(res.data.msg);
-  //       getMyPartyPalace();
-  //       close();
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     toast.error(error?.response?.data?.msg);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    if (files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].type.split("/")[0] !== "image") continue;
+      if (!image.some((e) => e.name === files[i].name)) {
+        setImage((prevImg) => [
+          ...prevImg,
+          {
+            name: files[i].name,
+            url: URL.createObjectURL(files[i]),
+            imgFile: files[i],
+          },
+        ]);
+      }
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -195,6 +248,7 @@ const CreatePartyPalace = () => {
       formData.append("capacity", data.capacity);
       formData.append("pricePerHour", data.pricePerHour);
       formData.append("category", JSON.stringify(data.category));
+      formData.append("coordinates", JSON.stringify(data.coordinates));
 
       const config = {
         headers: {
@@ -207,40 +261,38 @@ const CreatePartyPalace = () => {
       if (res && res.data && res.data.success) {
         toast.success(res.data.msg);
         setSuccessMessage("Party Palace created successfully!");
-      }
 
-      // addPartyPalace(data);
+        // Reset form
+        setData({
+          name: "",
+          description: "",
+          location: "",
+          capacity: "",
+          pricePerHour: "",
+          category: [],
+          coordinates: null,
+        });
+        setImage([]);
+        setSelectedCategory([]);
+        setShowMapModal(false);
+      }
     } catch (error) {
       console.log(error);
       toast.error(error?.response?.data?.msg || "Something went wrong!");
     } finally {
-      setData({
-        name: "",
-        description: "",
-        location: "",
-        capacity: "",
-        pricePerHour: "",
-        category: [],
-      });
-      setImage([]);
-      setSelectedCategory([]);
       setIsLoading(false);
     }
   };
 
   return (
-    <section className=" w-full 2xl:items-start  overflow-x-hidden overflow-y-auto bg-white">
+    <section className=" w-full 2xl:items-start overflow-x-hidden overflow-y-auto bg-white">
       <form
         onSubmit={handleSubmit}
-        className=" py-4 px-10 w-full space-y-4 2xl:max-w-7xl 2xl:mx-auto 2xl:mt-4 h-[calc(100vh)]  overflow-x-hidden overscroll-y-auto"
+        className=" py-4 px-10 w-full space-y-4 2xl:max-w-7xl 2xl:mx-auto 2xl:mt-4 h-[calc(100vh)] overflow-x-hidden overscroll-y-auto"
       >
         <p className="text-sky-500 text-2xl tracking-wider font-bold uppercase">
           Create Party Palace
         </p>
-
-        {/* {successMessage && (
-          <p className="text-green-500 font-medium mb-4">{successMessage}</p>
-        )} */}
 
         <div>
           <label htmlFor="name">Party Palace Name</label>
@@ -258,7 +310,7 @@ const CreatePartyPalace = () => {
 
         <div
           onClick={(e) => e.stopPropagation()}
-          className=" mx-auto bg-white rounded-md  w-full "
+          className=" mx-auto bg-white rounded-md w-full "
         >
           <p className=" text-neutral-600 font-semibold text-2xl">
             Drag and Drop Image For Upload
@@ -318,9 +370,6 @@ const CreatePartyPalace = () => {
                 </div>
               ))}
           </div>
-          {/* <button className="mt-4 text-white tracking-wider bg-sky-500 px-4 py-2 rounded-md w-full cursor-pointer">
-            {loading ? "Uploading..." : "Upload"}
-          </button> */}
         </div>
 
         <div>
@@ -380,17 +429,53 @@ const CreatePartyPalace = () => {
         )}
 
         <div>
-          <label htmlFor="location">Location</label>
+          <label htmlFor="location">Location (Address)</label>
           <input
             type="text"
             className="w-full outline-none p-2 rounded-md border border-neutral-400 mt-2 focus:border-sky-500"
-            placeholder="Enter location"
+            placeholder="Enter location address"
             id="location"
             name="location"
             value={data.location}
             onChange={handleChange}
             required
           />
+        </div>
+
+        {/* Map Section */}
+        <div className="border border-neutral-400 rounded-lg p-4 bg-neutral-50">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-neutral-700 font-semibold">
+              Select Location on Map
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowMapModal(!showMapModal)}
+              className="text-sky-500 text-sm font-semibold hover:text-sky-600 underline"
+            >
+              {showMapModal ? "Collapse" : "Expand"} Map
+            </button>
+          </div>
+
+          {data.coordinates && (
+            <div className="text-sm text-neutral-600 mb-3 p-2 bg-white rounded border border-neutral-300">
+              <strong>Coordinates:</strong> Lat:{" "}
+              {data.coordinates[1].toFixed(5)}, Lng:{" "}
+              {data.coordinates[0].toFixed(5)}
+            </div>
+          )}
+
+          <div
+            ref={mapRef}
+            className={`rounded-lg border border-neutral-300 overflow-hidden transition-all duration-300 ${
+              showMapModal ? "h-96" : "h-48"
+            }`}
+          />
+
+          <p className="text-xs text-neutral-500 mt-3">
+            💡 Drag the marker or click on the map to set your party palace
+            location. Default location is set to Nepal.
+          </p>
         </div>
 
         <div>
