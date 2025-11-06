@@ -43,32 +43,66 @@ const createPartyPalaceIcon = (isSelected = false) => {
   });
 };
 
-// Custom marker icon for user location
-const createUserLocationIcon = () => {
+// Custom marker icon for user location with pulsing animation and rotation
+const createUserLocationIcon = (heading = 0) => {
   return L.divIcon({
     html: `
- <div style="
-        background: white;
+      <div style="
+        position: relative;
         width: 38px;
         height: 38px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        border: 3px solid #3B82F6;
       ">
-        <img 
-          src="/location-map.svg" 
-          alt="User Location"
-          style="width: 24px; height: 24px; border-radius: 50%;" 
-        />
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          border: 3px solid #3B82F6;
+          animation: pulse-ring 2s infinite;
+        "></div>
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(${heading}deg);
+          background: white;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          border: 3px solid #3B82F6;
+          transition: transform 0.3s ease-out;
+        ">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 19 21 12 17 5 21 12 2"></polygon>
+          </svg>
+        </div>
       </div>
+      <style>
+        @keyframes pulse-ring {
+          0% {
+            width: 38px;
+            height: 38px;
+            opacity: 1;
+          }
+          100% {
+            width: 70px;
+            height: 70px;
+            opacity: 0;
+          }
+        }
+      </style>
     `,
     className: "user-location-marker",
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
+    iconSize: [70, 70],
+    iconAnchor: [35, 35],
+    popupAnchor: [0, -35],
   });
 };
 
@@ -118,10 +152,52 @@ const RouteRenderer = ({ pathCoordinates }) => {
   return null;
 };
 
+// Animated User Location Marker Component
+const AnimatedUserMarker = ({ position, heading }) => {
+  const markerRef = useRef(null);
+  const [markerKey, setMarkerKey] = useState(0);
+
+  useEffect(() => {
+    if (markerRef.current && position) {
+      markerRef.current.setLatLng([position.lat, position.lng]);
+    }
+  }, [position]);
+
+  // Update icon with new heading to trigger rotation
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.setIcon(createUserLocationIcon(heading || 0));
+    }
+  }, [heading]);
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={[position.lat, position.lng]}
+      icon={createUserLocationIcon(heading || 0)}
+    >
+      <Popup>
+        <div className="p-2">
+          <h3 className="font-semibold text-blue-600 text-sm">Your Location</h3>
+          <p className="text-xs text-gray-600 mt-1">
+            {position.lat.toFixed(4)}, {position.lng.toFixed(4)}
+          </p>
+          {heading !== null && heading !== undefined && (
+            <p className="text-xs text-gray-600 mt-1">
+              Heading: {Math.round(heading)}°
+            </p>
+          )}
+        </div>
+      </Popup>
+    </Marker>
+  );
+};
+
 const PartyPalaceMap = () => {
   const [selectedPartyPalace, setSelectedPartyPalace] = useState(null);
   const [partyPalaceData, setPartyPalaceData] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
+  const [userHeading, setUserHeading] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [pathCoordinates, setPathCoordinates] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -132,6 +208,7 @@ const PartyPalaceMap = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const mapRef = useRef(null);
+  const watchIdRef = useRef(null);
 
   // Request user location on component mount
   useEffect(() => {
@@ -144,25 +221,36 @@ const PartyPalaceMap = () => {
     applyFilters();
   }, [partyPalaceData, filterCapacity, filterRating]);
 
+  // Cleanup watch on unmount
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
+
   const requestUserLocation = () => {
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
+      watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
+          const { latitude, longitude, heading, accuracy } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
+          if (heading !== null && heading !== undefined) {
+            setUserHeading(heading);
+          }
           setLocationError(null);
-          console.log("Location access granted!");
+          console.log("Location updated!");
         },
         (error) => {
           setLocationError(error.message);
           console.error("Unable to access location: " + error.message);
-          // Set default location if geolocation fails
           setUserLocation({ lat: 27.632418, lng: 85.362488 });
-        }
+        },
+        { enableHighAccuracy: true }
       );
     } else {
       setLocationError("Geolocation is not supported");
-      console.error("Geolocation is not supported");
       setUserLocation({ lat: 27.632418, lng: 85.362488 });
     }
   };
@@ -429,24 +517,12 @@ const PartyPalaceMap = () => {
               <RouteRenderer pathCoordinates={pathCoordinates} />
             )}
 
-            {/* User Location Marker */}
+            {/* Animated User Location Marker */}
             {userLocation && (
-              <Marker
-                position={[userLocation.lat, userLocation.lng]}
-                icon={createUserLocationIcon()}
-              >
-                <Popup>
-                  <div className="p-2">
-                    <h3 className="font-semibold text-blue-600 text-sm">
-                      Your Location
-                    </h3>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {userLocation.lat.toFixed(4)},{" "}
-                      {userLocation.lng.toFixed(4)}
-                    </p>
-                  </div>
-                </Popup>
-              </Marker>
+              <AnimatedUserMarker
+                position={userLocation}
+                heading={userHeading}
+              />
             )}
 
             {/* Party Palace Markers */}
