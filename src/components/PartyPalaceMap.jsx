@@ -43,16 +43,82 @@ const createPartyPalaceIcon = (isSelected = false) => {
   });
 };
 
+// Custom marker icon for user location with pulsing animation
+const createUserLocationIcon = () => {
+  return L.divIcon({
+    html: `
+      <div style="
+        position: relative;
+        width: 38px;
+        height: 38px;
+      ">
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          border: 3px solid #3B82F6;
+          animation: pulse-ring 2s infinite;
+        "></div>
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          border: 3px solid #3B82F6;
+        ">
+          <img 
+            src="/location-map.svg" 
+            alt="User Location"
+            style="width: 24px; height: 24px; border-radius: 50%;" 
+          />
+        </div>
+      </div>
+      <style>
+        @keyframes pulse-ring {
+          0% {
+            width: 38px;
+            height: 38px;
+            opacity: 1;
+          }
+          100% {
+            width: 70px;
+            height: 70px;
+            opacity: 0;
+          }
+        }
+      </style>
+    `,
+    className: "user-location-marker",
+    iconSize: [70, 70],
+    iconAnchor: [35, 35],
+    popupAnchor: [0, -35],
+  });
+};
+
 // Route renderer component
 const RouteRenderer = ({ pathCoordinates }) => {
   const map = useMap();
 
   useEffect(() => {
     if (pathCoordinates && pathCoordinates.length > 0) {
+      // Create a FeatureGroup to hold all route layers
       const routeGroup = L.featureGroup();
 
       pathCoordinates.forEach((segment) => {
         if (segment && segment.length > 0) {
+          // Draw polyline for each segment
           const polyline = L.polyline(segment, {
             color: "#3B82F6",
             weight: 4,
@@ -63,8 +129,10 @@ const RouteRenderer = ({ pathCoordinates }) => {
         }
       });
 
+      // Add to map
       routeGroup.addTo(map);
 
+      // Fit bounds to show the entire route
       if (routeGroup.getLayers().length > 0) {
         setTimeout(() => {
           map.fitBounds(routeGroup.getBounds(), {
@@ -85,8 +153,8 @@ const RouteRenderer = ({ pathCoordinates }) => {
   return null;
 };
 
-// Animated User Location Marker Component with Gyroscope
-const AnimatedUserMarker = ({ position, deviceOrientation }) => {
+// Animated User Location Marker Component
+const AnimatedUserMarker = ({ position }) => {
   const markerRef = useRef(null);
 
   useEffect(() => {
@@ -95,83 +163,11 @@ const AnimatedUserMarker = ({ position, deviceOrientation }) => {
     }
   }, [position]);
 
-  useEffect(() => {
-    if (
-      markerRef.current &&
-      markerRef.current._icon &&
-      deviceOrientation !== null
-    ) {
-      const rotationDiv =
-        markerRef.current._icon.querySelector("[data-rotatable]");
-      if (rotationDiv) {
-        rotationDiv.style.transform = `translate(-50%, -50%) rotate(${deviceOrientation}deg)`;
-      }
-    }
-  }, [deviceOrientation]);
-
   return (
     <Marker
-      position={[position.lat, position.lng]}
-      icon={L.divIcon({
-        html: `
-          <div style="
-            position: relative;
-            width: 38px;
-            height: 38px;
-          ">
-            <div style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: 38px;
-              height: 38px;
-              border-radius: 50%;
-              border: 3px solid #3B82F6;
-              animation: pulse-ring 2s infinite;
-            "></div>
-            <div data-rotatable style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%) rotate(0deg);
-              background: white;
-              width: 38px;
-              height: 38px;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-              border: 3px solid #3B82F6;
-              transition: transform 0.15s ease-out;
-            ">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 19 21 12 17 5 21 12 2"></polygon>
-              </svg>
-            </div>
-          </div>
-          <style>
-            @keyframes pulse-ring {
-              0% {
-                width: 38px;
-                height: 38px;
-                opacity: 1;
-              }
-              100% {
-                width: 70px;
-                height: 70px;
-                opacity: 0;
-              }
-            }
-          </style>
-        `,
-        className: "user-location-marker",
-        iconSize: [70, 70],
-        iconAnchor: [35, 35],
-        popupAnchor: [0, -35],
-      })}
       ref={markerRef}
+      position={[position.lat, position.lng]}
+      icon={createUserLocationIcon()}
     >
       <Popup>
         <div className="p-2">
@@ -179,11 +175,6 @@ const AnimatedUserMarker = ({ position, deviceOrientation }) => {
           <p className="text-xs text-gray-600 mt-1">
             {position.lat.toFixed(4)}, {position.lng.toFixed(4)}
           </p>
-          {deviceOrientation !== null && (
-            <p className="text-xs text-gray-600 mt-1">
-              Direction: {Math.round(deviceOrientation)}°
-            </p>
-          )}
         </div>
       </Popup>
     </Marker>
@@ -194,7 +185,6 @@ const PartyPalaceMap = () => {
   const [selectedPartyPalace, setSelectedPartyPalace] = useState(null);
   const [partyPalaceData, setPartyPalaceData] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [deviceOrientation, setDeviceOrientation] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [pathCoordinates, setPathCoordinates] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -211,7 +201,6 @@ const PartyPalaceMap = () => {
   useEffect(() => {
     requestUserLocation();
     getAllPartyPalaces();
-    requestDeviceOrientation();
   }, []);
 
   // Apply filters
@@ -225,7 +214,6 @@ const PartyPalaceMap = () => {
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
-      window.removeEventListener("deviceorientation", handleDeviceOrientation);
     };
   }, []);
 
@@ -249,40 +237,6 @@ const PartyPalaceMap = () => {
       setLocationError("Geolocation is not supported");
       setUserLocation({ lat: 27.632418, lng: 85.362488 });
     }
-  };
-
-  const requestDeviceOrientation = () => {
-    if (typeof DeviceOrientationEvent !== "undefined") {
-      if (typeof DeviceOrientationEvent.requestPermission === "function") {
-        // iOS 13+ requires permission
-        DeviceOrientationEvent.requestPermission()
-          .then((permissionState) => {
-            if (permissionState === "granted") {
-              window.addEventListener(
-                "deviceorientation",
-                handleDeviceOrientation
-              );
-            }
-          })
-          .catch(console.error);
-      } else {
-        // Non-iOS 13 devices
-        window.addEventListener("deviceorientation", handleDeviceOrientation);
-      }
-    } else {
-      console.log("Device Orientation API not supported");
-    }
-  };
-
-  const handleDeviceOrientation = (event) => {
-    let alpha = event.alpha; // Z axis rotation (0-360)
-    let beta = event.beta; // X axis rotation (-180 to 180)
-    let gamma = event.gamma; // Y axis rotation (-90 to 90)
-
-    // Use alpha for compass heading (0° is north)
-    let heading = Math.round(alpha);
-
-    setDeviceOrientation(heading);
   };
 
   const getAllPartyPalaces = async () => {
@@ -324,7 +278,7 @@ const PartyPalaceMap = () => {
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
+    const R = 6371; // Earth's radius in km
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
@@ -337,8 +291,10 @@ const PartyPalaceMap = () => {
     return R * c;
   };
 
+  // Fetch actual road route from OSRM API
   const fetchRoute = async (start, end) => {
     try {
+      // Using Open Source Routing Machine (OSRM) for real road routing
       const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?geometries=geojson&overview=full`;
 
       const response = await fetch(url);
@@ -367,6 +323,7 @@ const PartyPalaceMap = () => {
     let nearest = null;
     let minDistance = Infinity;
 
+    // Find nearest palace
     filteredData.forEach((palace) => {
       if (
         palace.baseLocation &&
@@ -392,6 +349,7 @@ const PartyPalaceMap = () => {
       setNearestPalace(nearest);
       setSelectedPartyPalace(nearest._id);
 
+      // Fetch actual route through roads
       const routeCoordinates = await fetchRoute(
         [userLocation.lat, userLocation.lng],
         [
@@ -403,6 +361,7 @@ const PartyPalaceMap = () => {
       if (routeCoordinates) {
         setPathCoordinates(routeCoordinates);
       } else {
+        // Fallback to direct line if route fetching fails
         const pathCoords = [
           [userLocation.lat, userLocation.lng],
           [
@@ -415,6 +374,7 @@ const PartyPalaceMap = () => {
 
       console.log(`Nearest palace: ${nearest.name}`);
 
+      // Auto zoom and fit bounds will be handled by RouteRenderer component
       setTimeout(() => {
         setIsAnimating(false);
       }, 1500);
@@ -472,6 +432,20 @@ const PartyPalaceMap = () => {
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
+          {/* <div>
+            <label className="text-xs sm:text-sm font-medium text-gray-700 block mb-1">
+              Min Rating
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              max="5"
+              value={filterRating}
+              onChange={(e) => setFilterRating(e.target.value)}
+              placeholder="0 - 5"
+              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div> */}
           <button
             onClick={() => {
               setFilterCapacity("");
@@ -527,13 +501,8 @@ const PartyPalaceMap = () => {
               <RouteRenderer pathCoordinates={pathCoordinates} />
             )}
 
-            {/* Animated User Location Marker with Gyroscope */}
-            {userLocation && (
-              <AnimatedUserMarker
-                position={userLocation}
-                deviceOrientation={deviceOrientation}
-              />
-            )}
+            {/* Animated User Location Marker */}
+            {userLocation && <AnimatedUserMarker position={userLocation} />}
 
             {/* Party Palace Markers */}
             {filteredData.map((palace) => {
