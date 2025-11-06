@@ -155,7 +155,7 @@ const RouteRenderer = ({ pathCoordinates }) => {
 // Animated User Location Marker Component
 const AnimatedUserMarker = ({ position, heading }) => {
   const markerRef = useRef(null);
-  const [markerKey, setMarkerKey] = useState(0);
+  const iconElementRef = useRef(null);
 
   useEffect(() => {
     if (markerRef.current && position) {
@@ -163,18 +163,87 @@ const AnimatedUserMarker = ({ position, heading }) => {
     }
   }, [position]);
 
-  // Update icon with new heading to trigger rotation
+  // Update rotation in real-time without recreating the icon
   useEffect(() => {
-    if (markerRef.current) {
-      markerRef.current.setIcon(createUserLocationIcon(heading || 0));
+    if (iconElementRef.current && heading !== null && heading !== undefined) {
+      const rotationDiv =
+        iconElementRef.current.querySelector("[data-rotatable]");
+      if (rotationDiv) {
+        rotationDiv.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+      }
     }
   }, [heading]);
 
+  const handleMarkerRef = (el) => {
+    markerRef.current = el;
+    if (el && el._icon) {
+      iconElementRef.current = el._icon;
+    }
+  };
+
   return (
     <Marker
-      ref={markerRef}
       position={[position.lat, position.lng]}
-      icon={createUserLocationIcon(heading || 0)}
+      icon={L.divIcon({
+        html: `
+          <div style="
+            position: relative;
+            width: 38px;
+            height: 38px;
+          ">
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 38px;
+              height: 38px;
+              border-radius: 50%;
+              border: 3px solid #3B82F6;
+              animation: pulse-ring 2s infinite;
+            "></div>
+            <div data-rotatable style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(${heading || 0}deg);
+              background: white;
+              width: 38px;
+              height: 38px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+              border: 3px solid #3B82F6;
+              transition: transform 0.1s linear;
+            ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 19 21 12 17 5 21 12 2"></polygon>
+              </svg>
+            </div>
+          </div>
+          <style>
+            @keyframes pulse-ring {
+              0% {
+                width: 38px;
+                height: 38px;
+                opacity: 1;
+              }
+              100% {
+                width: 70px;
+                height: 70px;
+                opacity: 0;
+              }
+            }
+          </style>
+        `,
+        className: "user-location-marker",
+        iconSize: [70, 70],
+        iconAnchor: [35, 35],
+        popupAnchor: [0, -35],
+      })}
+      ref={handleMarkerRef}
     >
       <Popup>
         <div className="p-2">
