@@ -190,10 +190,13 @@ const Navbar = () => {
               Contact
             </a>
 
-            <a className="py-3 px-3 text-sm font-medium hover:text-orange-400 transition duration-300 cursor-pointer flex items-center gap-2 text-slate-300">
+            <Link
+              to="/feedback"
+              className="py-3 px-3 text-sm font-medium hover:text-orange-400 transition duration-300 cursor-pointer flex items-center gap-2 text-slate-300"
+            >
               <FaStar className="text-sm" />
-              Reviews
-            </a>
+              Feedbacks
+            </Link>
           </div>
 
           {/* Desktop Search */}
@@ -345,9 +348,12 @@ const Navbar = () => {
         <a className="py-3 px-6 text-sm font-medium hover:bg-slate-700/50 hover:text-orange-400 flex items-center gap-3 text-slate-300 transition-all cursor-pointer">
           <FaPhoneVolume className="text-sm" /> Contact
         </a>
-        <a className="py-3 px-6 text-sm font-medium hover:bg-slate-700/50 hover:text-orange-400 flex items-center gap-3 text-slate-300 transition-all cursor-pointer">
-          <FaStar className="text-sm" /> Review
-        </a>
+        <Link
+          to="/feedback"
+          className="py-3 px-6 text-sm font-medium hover:bg-slate-700/50 hover:text-orange-400 flex items-center gap-3 text-slate-300 transition-all cursor-pointer"
+        >
+          <FaStar className="text-sm" /> Feedbacks
+        </Link>
         <div className="lg:hidden py-3 px-6">
           <ProfileDropdown />
         </div>

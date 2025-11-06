@@ -26,6 +26,7 @@ import Signup from "../pages/Signup";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import PartypalaceMapLayout from "../layouts/PartypalaceMapLayout";
 import PartyPalaceMap from "../components/PartyPalaceMap";
+import FeedbackPage from "../pages/FeedbackPage";
 
 const GoogleAuthWrapper = () => {
   return (
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
         path: "/map",
         element: <PartypalaceMapLayout />,
         children: [{ path: "", element: <PartyPalaceMap /> }],
+      },
+      {
+        path: "/feedback",
+        element: <FeedbackPage />,
       },
     ],
   },
