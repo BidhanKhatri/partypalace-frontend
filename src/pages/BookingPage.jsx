@@ -109,6 +109,7 @@ const BookingPage = () => {
     hoursBooked: hoursBooked,
     totalPrice: selectedPartyPalace.pricePerHour * hoursBooked,
   };
+  console.log(payload);
 
   const handleBooking = async () => {
     try {
