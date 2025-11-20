@@ -73,7 +73,11 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.error("Google login failed:", error);
-      toast.error(error?.response?.data?.message || "Google login failed");
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.msg ||
+          "Google login failed"
+      );
     }
   };
 
@@ -109,7 +113,8 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error?.response?.data?.msg);
+
+      toast.error(error?.response?.data?.message || error?.response?.data?.msg);
     }
   };
 
