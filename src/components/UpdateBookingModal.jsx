@@ -13,7 +13,7 @@ const UpdateBookingModal = ({ prevBookingData, setPrevBookingData, close }) => {
     partyPalaceId: prevBookingData?.partyPalace?._id || "",
     bookingDate:
       new Date(prevBookingData?.bookingDate).toISOString().split("T")[0] || "",
-    hoursBooked: prevBookingData.hoursBooked || 1,
+    guestCount: prevBookingData.guestCount || 0,
     totalPrice: prevBookingData.totalPrice || 0,
   });
 
@@ -116,20 +116,20 @@ const UpdateBookingModal = ({ prevBookingData, setPrevBookingData, close }) => {
 
             {/* Hours Booked */}
             <div>
-              <label className="block text-sm text-gray-300 mb-1">Hours</label>
+              <label className="block text-sm text-gray-300 mb-1">Guests</label>
               <input
                 type="number"
-                min="1"
-                max="12"
-                name="hoursBooked"
+                // min="1"
+                // max="12"
+                name="guestCount"
                 className="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white text-sm"
                 onChange={handleUpdateChange}
-                value={data.hoursBooked}
+                value={data.guestCount}
               />
             </div>
 
             {/* Total Price */}
-            <div>
+            {/* <div>
               <label className="block text-sm text-gray-300 mb-1">
                 Total Price
               </label>
@@ -140,7 +140,7 @@ const UpdateBookingModal = ({ prevBookingData, setPrevBookingData, close }) => {
                 readOnly
                 value={data.totalPrice}
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Action Buttons */}

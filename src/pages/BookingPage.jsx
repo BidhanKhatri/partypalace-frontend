@@ -22,6 +22,14 @@ import {
 import Review from "../components/Review";
 import MacScrollEffect from "../utils/MacScrollEffect";
 
+// Import Swiper React components and styles
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Thumbs, Autoplay, A11y } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/thumbs";
+
 const BookingPage = () => {
   const { partypalace, selectedPartyPalace } = useSelector(
     (state) => state?.partypalace
@@ -37,6 +45,12 @@ const BookingPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
   const scrollTopRef = useRef(null);
+  const [eventType, setEventType] = useState("");
+  const [guestCount, setGuestCount] = useState("");
+  const [packageType, setPackageType] = useState("");
+  const [specialRequirements, setSpecialRequirements] = useState("");
+  const [advancePaid, setAdvancePaid] = useState("");
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
   useEffect(() => {
     fetchOnlyOne();
@@ -59,6 +73,18 @@ const BookingPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Fix date formatting to handle timezone issues
+  const formatDateForPayload = (date) => {
+    if (!date) return null;
+
+    // Use local date components to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
   };
 
   if (isLoading) {
@@ -105,10 +131,15 @@ const BookingPage = () => {
 
   const payload = {
     partyPalaceId: selectedPartyPalace._id,
-    bookingDate: startDate,
-    hoursBooked: hoursBooked,
+    bookingDate: formatDateForPayload(startDate), // Use fixed date formatting
+    eventType,
+    guestCount: Number(guestCount),
+    package: packageType,
+    specialRequirements,
+    advancePaid: Number(advancePaid),
     totalPrice: selectedPartyPalace.pricePerHour * hoursBooked,
   };
+
   console.log(payload);
 
   const handleBooking = async () => {
@@ -125,6 +156,11 @@ const BookingPage = () => {
         getBookingData();
         setStartDate(null);
         setHoursBooked(1);
+        setEventType("");
+        setGuestCount("");
+        setPackageType("");
+        setSpecialRequirements("");
+        setAdvancePaid("");
       }
     } catch (error) {
       console.log(error);
@@ -144,18 +180,6 @@ const BookingPage = () => {
     localStorage.setItem("selectedChat", JSON.stringify(payload));
   };
 
-  const nextImage = () => {
-    setImageIndex((prevIndex) =>
-      prevIndex === selectedPartyPalace.images.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const prevImage = () => {
-    setImageIndex((prevIndex) =>
-      prevIndex === 0 ? selectedPartyPalace.images.length - 1 : prevIndex - 1
-    );
-  };
-
   const toggleLike = () => {
     setIsLiked(!isLiked);
     toast.success(isLiked ? "Removed from favorites" : "Added to favorites");
@@ -165,58 +189,64 @@ const BookingPage = () => {
     <MacScrollEffect>
       <section className="mt-6 md:mt-14 max-w-7xl mx-auto px-3 sm:px-6 min-h-[calc(100vh-64px)] bg-gradient-to-b from-neutral-900 via-neutral-950 to-black text-white rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex flex-col">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-10 flex-1 overflow-hidden">
-          {/* Left Section: Image Gallery */}
+          {/* Left Section: Image Gallery with Swiper */}
           <div className="space-y-3 md:space-y-4 flex flex-col mt-8 justify-center lg:justify-normal bg-neutral-900/70 backdrop-blur-sm p-3 md:p-4 rounded-lg md:rounded-2xl shadow-lg overflow-hidden">
-            <div className="relative h-64 sm:h-80 md:h-96 lg:h-[450px] rounded-lg md:rounded-xl overflow-hidden shadow-lg group">
-              <img
-                src={
-                  selectedPartyPalace.images[imageIndex] || "/placeholder.svg"
-                }
-                alt={selectedPartyPalace.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <button
-                onClick={prevImage}
-                className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-1.5 md:p-2 rounded-full transition z-10"
+            {/* Main Swiper */}
+            <div className="relative h-64 sm:h-80 md:h-96 lg:h-[450px] rounded-lg md:rounded-xl overflow-hidden shadow-lg">
+              <Swiper
+                modules={[Navigation, Pagination, Thumbs, Autoplay, A11y]}
+                navigation
+                autoplay={{ delay: 2000, disableOnInteraction: false }}
+                loop={true}
+                pagination={{
+                  clickable: true,
+                }}
+                className="h-full w-full"
+                onSlideChange={(swiper) => setImageIndex(swiper.activeIndex)}
               >
-                <FaChevronLeft className="text-sm md:text-base" />
-              </button>
-              <button
-                onClick={nextImage}
-                className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-1.5 md:p-2 rounded-full transition z-10"
-              >
-                <FaChevronRight className="text-sm md:text-base" />
-              </button>
-              <div className="absolute bottom-2 md:bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1 bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                {selectedPartyPalace.images.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-1.5 w-1.5 rounded-full transition-all ${
-                      imageIndex === index ? "bg-[#FBAD34] w-4" : "bg-gray-400"
-                    }`}
-                  />
+                {selectedPartyPalace.images.map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <img
+                        src={image || "/placeholder.svg"}
+                        alt={`${selectedPartyPalace.name} - Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </SwiperSlide>
                 ))}
-              </div>
+              </Swiper>
             </div>
 
-            <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#FBAD34]/70 scrollbar-track-neutral-800 rounded-lg">
-              {selectedPartyPalace.images.map((image, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleImgIndex(index)}
-                  className={`h-16 md:h-20 w-20 md:w-24 flex-shrink-0 cursor-pointer border-2 rounded-lg overflow-hidden transition-all duration-300 ${
-                    imageIndex === index
-                      ? "border-[#FBAD34] shadow-md ring-2 ring-[#FBAD34]/50"
-                      : "border-neutral-700 hover:border-[#FBAD34]"
-                  }`}
-                >
-                  <img
-                    src={image || "/placeholder.svg"}
-                    alt={`Preview ${index}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
+            {/* Thumbnail Swiper */}
+            <div className="w-full">
+              <Swiper
+                modules={[Thumbs]}
+                watchSlidesProgress
+                onSwiper={setThumbsSwiper}
+                spaceBetween={8}
+                slidesPerView={4}
+                freeMode={true}
+                className="thumbnail-swiper"
+              >
+                {selectedPartyPalace.images.map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <div
+                      className={`h-16 md:h-20 w-full cursor-pointer border-2 rounded-lg overflow-hidden transition-all duration-300 ${
+                        imageIndex === index
+                          ? "border-[#FBAD34] shadow-md ring-2 ring-[#FBAD34]/50"
+                          : "border-neutral-700 hover:border-[#FBAD34]"
+                      }`}
+                    >
+                      <img
+                        src={image || "/placeholder.svg"}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
           </div>
 
@@ -225,7 +255,7 @@ const BookingPage = () => {
             <div>
               <div className="flex justify-between items-start md:items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white truncate">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white truncate py-1.5">
                     {selectedPartyPalace.name}
                   </h1>
                   <p className="text-xs md:text-sm text-gray-400 mt-1">
@@ -259,7 +289,7 @@ const BookingPage = () => {
               </div>
               <div className="flex items-center space-x-2 md:space-x-3 text-gray-300 bg-neutral-800/50 p-3 rounded-lg">
                 <FaClock className="text-[#FBAD34] flex-shrink-0" />
-                <span>NPR {selectedPartyPalace.pricePerHour} / hour</span>
+                <span>NPR {selectedPartyPalace.pricePerHour} / day</span>
               </div>
               <div className="flex items-center space-x-2 md:space-x-3 text-gray-300 bg-neutral-800/50 p-3 rounded-lg">
                 <FaWifi className="text-[#FBAD34] flex-shrink-0" />
@@ -285,51 +315,76 @@ const BookingPage = () => {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label
-                    htmlFor="hoursBooked"
-                    className="block text-xs md:text-sm font-medium text-gray-300 mb-2"
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                    Event Type *
+                  </label>
+                  <select
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value)}
+                    className="p-2 md:p-3 bg-neutral-900 border border-neutral-700 text-white rounded-md"
                   >
-                    Booking Hours
+                    <option value="">Select event</option>
+                    <option value="wedding">Wedding</option>
+                    <option value="birthday">Birthday</option>
+                    <option value="reception">Reception</option>
+                    <option value="corporate">Corporate Event</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                    Guest Count *
                   </label>
                   <input
-                    id="hoursBooked"
                     type="number"
-                    className="w-full p-2 md:p-3 bg-neutral-900 border border-neutral-700 text-white rounded-md focus:ring-[#FBAD34] focus:border-[#FBAD34] text-sm md:text-base"
-                    value={hoursBooked}
                     min="1"
-                    max="12"
-                    onChange={(e) =>
-                      setHoursBooked(
-                        Math.max(
-                          1,
-                          Math.min(12, Number.parseInt(e.target.value) || 1)
-                        )
-                      )
-                    }
+                    value={guestCount}
+                    onChange={(e) => setGuestCount(e.target.value)}
+                    className="p-2 md:p-3 bg-neutral-900 border border-neutral-700 text-white rounded-md"
+                    placeholder="Number of guests"
                   />
-                  <div className="mt-4 bg-neutral-900 p-3 md:p-4 rounded-md shadow-sm text-xs md:text-sm space-y-2 border border-neutral-800">
-                    <p className="flex justify-between py-1.5 text-gray-300">
-                      <span>Selected Date:</span>
-                      <span className="font-semibold text-white text-right">
-                        {startDate
-                          ? startDate.toLocaleDateString()
-                          : "Not selected"}
-                      </span>
-                    </p>
-                    <p className="flex justify-between py-1.5 text-gray-300">
-                      <span>Total Hours:</span>
-                      <span className="font-semibold text-white">
-                        {hoursBooked} hours
-                      </span>
-                    </p>
-                    <div className="h-px bg-neutral-700 my-2"></div>
-                    <p className="flex justify-between py-1.5 text-base md:text-lg font-bold text-[#FBAD34]">
-                      <span>Total Price:</span>
-                      <span>
-                        NPR {selectedPartyPalace.pricePerHour * hoursBooked}
-                      </span>
-                    </p>
-                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                    Package *
+                  </label>
+                  <select
+                    value={packageType}
+                    onChange={(e) => setPackageType(e.target.value)}
+                    className="p-2 md:p-3 bg-neutral-900 border border-neutral-700 text-white rounded-md"
+                  >
+                    <option value="">Select package</option>
+                    <option value="silver">Silver</option>
+                    <option value="gold">Gold</option>
+                    <option value="platinum">Platinum</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col md:col-span-2">
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                    Special Requirements
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={specialRequirements}
+                    onChange={(e) => setSpecialRequirements(e.target.value)}
+                    className="p-2 md:p-3 bg-neutral-900 border border-neutral-700 text-white rounded-md"
+                    placeholder="Decoration, catering, sound system, etc."
+                  />
+                </div>
+
+                <div className="flex flex-col md:col-span-2">
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                    Advance Payment
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={advancePaid}
+                    onChange={(e) => setAdvancePaid(e.target.value)}
+                    className="p-2 md:p-3 bg-neutral-900 border border-neutral-700 text-white rounded-md"
+                    placeholder="Amount paid in advance (optional)"
+                  />
                 </div>
               </div>
             </div>
@@ -337,12 +392,20 @@ const BookingPage = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleBooking}
-                disabled={!startDate || isBooking}
-                className={`w-full sm:flex-1 py-2.5 md:py-3 rounded-lg text-white font-medium text-sm md:text-base transition-all duration-200 ${
-                  startDate && !isBooking
-                    ? "bg-[#FBAD34] hover:bg-[#e99d23] hover:scale-[1.02] active:scale-95"
-                    : "bg-neutral-700 cursor-not-allowed opacity-50"
-                } flex items-center justify-center gap-2`}
+                disabled={
+                  !startDate ||
+                  !eventType ||
+                  !guestCount ||
+                  !packageType ||
+                  isBooking
+                }
+                className={`w-full sm:flex-1 py-2.5 md:py-3 rounded-lg text-white font-medium text-sm md:text-base transition-all duration-200 flex items-center justify-center gap-2
+    ${
+      !startDate || !eventType || !guestCount || !packageType || isBooking
+        ? "bg-neutral-700 cursor-not-allowed opacity-50"
+        : "bg-[#FBAD34] hover:bg-[#e99d23] hover:scale-[1.02] active:scale-95"
+    }
+  `}
               >
                 {isBooking ? (
                   <>
@@ -353,6 +416,7 @@ const BookingPage = () => {
                   "Book Now"
                 )}
               </button>
+
               <Link
                 to={`/chat/${selectedPartyPalace.createdBy._id}/${selectedPartyPalace._id}`}
                 onClick={dispatchSelectedPartyPalace}
