@@ -78,10 +78,10 @@ const UserStatusListPage = () => {
                 </span>
               </div>
 
-              {/* total hour */}
+              {/* total capacity */}
               <div>
-                <p className="mb-1 font-semibold">🕒Total Hour</p>
-                <span>{el.hoursBooked}</span>
+                <p className="mb-1 font-semibold">Guests</p>
+                <span>{el?.totalCapacity || 0}</span>
               </div>
 
               {/* total price */}

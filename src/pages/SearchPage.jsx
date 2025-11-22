@@ -55,12 +55,11 @@ const SearchPage = () => {
         <div className="w-full flex-1 flex flex-col overflow-hidden">
           {/* Header - Mobile */}
           <div className="lg:hidden px-4 py-3 border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
-         
             {searchComponent}
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="  h-[90vh] min-h-[calc(100vh-64px)] overflow-y-scroll">
             {loading ? (
               <div className="flex items-center justify-center h-full min-h-96 lg:min-h-full">
                 <div className="flex flex-col items-center gap-4">

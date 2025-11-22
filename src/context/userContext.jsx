@@ -132,9 +132,14 @@ export const UserProvider = ({ children }) => {
   const sendMessage = async (data) => {
     try {
       setLoading(true);
-      const res = await api.post("/api/message/sendMyMessage", data);
+      const res = await api.post("/api/message/sendMyMessage", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.data && res.data.success) {
-        toast.success(res.data.msg);
+        // toast.success(res.data.msg);
+        await getMessage(data.receiverId);
       }
     } catch (error) {
       toast.error(error.response.data.msg);
@@ -149,7 +154,12 @@ export const UserProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await api.get(
-        `/api/message/getMessage?receiverId=${receiverId}`
+        `/api/message/getMessage?receiverId=${receiverId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (res.data && res.data.success) {
         setMessage(res.data.data);

@@ -1,48 +1,116 @@
-import React, { useState } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Users, Building2, TrendingUp, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import { Building2, TrendingUp, Calendar } from "lucide-react";
+import api from "../utils/apiInstance";
 
 const Dashboard = () => {
-  const [dateRange] = useState('month');
+  const [stats, setStats] = useState([]);
+  const [bookingStatusData, setBookingStatusData] = useState([]);
+  const [palaceData, setPalaceData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample data
-  const stats = [
-    { label: 'Total Party Palaces', value: '24', icon: Building2, color: 'bg-blue-500' },
-    { label: 'Active Party Palaces', value: '18', icon: Building2, color: 'bg-green-500' },
-    { label: 'Total Revenue', value: '$45,230', icon: TrendingUp, color: 'bg-purple-500' },
-    { label: 'Bookings This Month', value: '156', icon: Calendar, color: 'bg-orange-500' },
-  ];
+  // Colors for booking status chart
+  const statusColors = {
+    Pending: "#f59e0b",
+    Confirmed: "#10b981",
+    Cancelled: "#ef4444",
+  };
 
-  const revenueData = [
-    { month: 'Jan', revenue: 4000 },
-    { month: 'Feb', revenue: 3000 },
-    { month: 'Mar', revenue: 5000 },
-    { month: 'Apr', revenue: 6500 },
-    { month: 'May', revenue: 7200 },
-    { month: 'Jun', revenue: 8100 },
-  ];
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("api/admin/dashboard");
+      const data = res.data;
 
-  const bookingStatusData = [
-    { name: 'Completed', value: 85, fill: '#10b981' },
-    { name: 'Pending', value: 45, fill: '#f59e0b' },
-    { name: 'Cancelled', value: 26, fill: '#ef4444' },
-  ];
+      // Map stats to match original dummy structure
+      const statsArray = [
+        {
+          label: "Total Party Palaces",
+          value: data.stats.totalPalaces,
+          icon: Building2,
+          color: "bg-blue-500",
+        },
+        {
+          label: "Active Party Palaces",
+          value: data.stats.activePalaces,
+          icon: Building2,
+          color: "bg-green-500",
+        },
+        {
+          label: "Total Revenue",
+          value: `Rs ${data.stats.totalRevenue}`,
+          icon: TrendingUp,
+          color: "bg-purple-500",
+        },
+        {
+          label: "Bookings This Month",
+          value: data.stats.monthlyBookings,
+          icon: Calendar,
+          color: "bg-orange-500",
+        },
+      ];
 
-  const palaceData = [
-    { name: 'Palace A', bookings: 24, revenue: 8500 },
-    { name: 'Palace B', bookings: 19, revenue: 6200 },
-    { name: 'Palace C', bookings: 28, revenue: 9100 },
-    { name: 'Palace D', bookings: 15, revenue: 5300 },
-    { name: 'Palace E', bookings: 22, revenue: 7800 },
-  ];
+      // Format booking status for PieChart
+      const bookingStatusFormatted = data.bookingStatusData.map((status) => ({
+        name: status.name,
+        value: status.value,
+        fill: statusColors[status.name] || "#8884d8",
+      }));
+
+      setStats(statsArray);
+      setBookingStatusData(bookingStatusFormatted);
+      setPalaceData(data.palacePerformance);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  if (loading)
+    return (
+      <div className="p-8 max-w-7xl mx-auto bg-gray-100 flex-1">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 animate-pulse bg-gray-200 h-8 w-1/3 rounded"></h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[...Array(4)].map((_, idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-lg shadow p-6 animate-pulse h-28"
+            ></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white rounded-lg shadow p-6 animate-pulse h-96"></div>
+          <div className="bg-white rounded-lg shadow p-6 animate-pulse h-96"></div>
+        </div>
+      </div>
+    );
 
   return (
-    <section className="w-full min-h-screen bg-gray-50 p-4 md:p-8  h-screen overflow-y-auto flex-1">
+    <section className="w-full max-h-screen bg-white p-4 md:p-8 overflow-y-auto ">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back! Here's your party palace overview.</p>
+          <p className="text-gray-600 mt-2">
+            Welcome back! Here's your party palace overview.
+          </p>
         </div>
 
         {/* Stats Grid */}
@@ -53,8 +121,12 @@ const Dashboard = () => {
               <div key={idx} className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                    <p className="text-gray-600 text-sm font-medium">
+                      {stat.label}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">
+                      {stat.value}
+                    </p>
                   </div>
                   <div className={`${stat.color} p-3 rounded-lg`}>
                     <Icon className="text-white" size={24} />
@@ -67,23 +139,40 @@ const Dashboard = () => {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Revenue Chart */}
+          {/* Palace Performance */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Revenue Trend</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Palace Performance
+            </h2>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
+              <BarChart data={palaceData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis dataKey="name" />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
-                <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={2} />
-              </LineChart>
+                <Legend />
+                <Bar
+                  yAxisId="left"
+                  dataKey="bookings"
+                  fill="#3b82f6"
+                  name="Bookings"
+                />
+                <Bar
+                  yAxisId="right"
+                  dataKey="revenue"
+                  fill="#10b981"
+                  name="Revenue (Rs)"
+                />
+              </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Booking Status */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Booking Status</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Booking Status
+            </h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -93,7 +182,6 @@ const Dashboard = () => {
                   labelLine={false}
                   label={({ name, value }) => `${name} (${value})`}
                   outerRadius={80}
-                  fill="#8884d8"
                   dataKey="value"
                 >
                   {bookingStatusData.map((entry, index) => (
@@ -104,23 +192,6 @@ const Dashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
-
-        {/* Palace Performance */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Palace Performance</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={palaceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
-              <Tooltip />
-              <Legend />
-              <Bar yAxisId="left" dataKey="bookings" fill="#3b82f6" name="Bookings" />
-              <Bar yAxisId="right" dataKey="revenue" fill="#10b981" name="Revenue ($)" />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
       </div>
     </section>

@@ -5,17 +5,15 @@ import { toast } from "react-toastify";
 import { logout } from "../redux/features/userSlice";
 import { Link } from "react-router-dom";
 import { MdDashboard, MdLogout, MdSettings } from "react-icons/md";
-import { IoIosCreate } from "react-icons/io";
-import { GiIndianPalace } from "react-icons/gi";
-import { FaBell, FaMessage, FaMoneyBill1Wave } from "react-icons/fa6";
-import adminContext from "../context/adminContext";
 import api from "../utils/apiInstance";
+import { ListChecks, VerifiedIcon } from "lucide-react";
+import { FaUserSecret } from "react-icons/fa";
+import { FaUserGroup, FaUserShield } from "react-icons/fa6";
 
-const AdminNavbar = () => {
+const SuperAdminNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { setMyPartyPalaceData } = useContext(adminContext);
 
   async function handleLogout() {
     try {
@@ -25,7 +23,6 @@ const AdminNavbar = () => {
         toast.success(res.data.msg);
         dispatch(logout());
         navigate("/login");
-        setMyPartyPalaceData([]);
       }
     } catch (error) {
       console.log(error);
@@ -35,35 +32,34 @@ const AdminNavbar = () => {
 
   const navItems = [
     {
-      path: "/admin/dashboard",
+      path: "/superadmin/dashboard",
       label: "Dashboard",
       icon: <MdDashboard className="w-5 h-5" />,
       exact: true,
     },
     {
-      path: "/admin/create-partypalace",
-      label: "Create Party Palace",
-      icon: <IoIosCreate className="w-5 h-5" />,
+      path: "/superadmin/list-category",
+      label: "List Category",
+      icon: <ListChecks className="w-5 h-5" />,
+      exact: true,
     },
     {
-      path: "/admin/display-partypalace",
-      label: "Party Palaces",
-      icon: <GiIndianPalace className="w-5 h-5" />,
+      path: "/superadmin/verify-palaces",
+      label: "Verify Palaces",
+      icon: <VerifiedIcon className="w-5 h-5" />,
+      exact: true,
     },
     {
-      path: "/admin/booking-userstatus",
-      label: "Notifications",
-      icon: <FaBell className="w-5 h-5" />,
+      path: "/superadmin/list-admins",
+      label: "Admin Management",
+      icon: <FaUserShield className="w-5 h-5" />,
+      exact: true,
     },
     {
-      path: "/admin/chat",
-      label: "Chat",
-      icon: <FaMessage className="w-5 h-5" />,
-    },
-    {
-      path: "/admin/payments",
-      label: "Payments",
-      icon: <FaMoneyBill1Wave className="w-5 h-5" />,
+      path: "/superadmin/list-users",
+      label: "User Management",
+      icon: <FaUserGroup className="w-5 h-5" />,
+      exact: true,
     },
   ];
 
@@ -76,7 +72,7 @@ const AdminNavbar = () => {
     <aside className="h-screen w-72 bg-white border-r border-gray-200 flex flex-col shadow-sm">
       {/* Logo Section */}
       <div className="px-6 py-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-900">AdminHub</h1>
+        <h1 className="text-2xl font-bold text-gray-900">SuperAdmin Portal</h1>
         <p className="text-xs text-gray-500 mt-1">Management System</p>
       </div>
 
@@ -84,10 +80,12 @@ const AdminNavbar = () => {
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">
-            A
+            S
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Admin Name</p>
+            <p className="text-sm font-semibold text-gray-900">
+              SuperAdmin Name
+            </p>
             <p className="text-xs text-gray-500 truncate">admin@example.com</p>
           </div>
         </div>
@@ -135,4 +133,4 @@ const AdminNavbar = () => {
   );
 };
 
-export default AdminNavbar;
+export default SuperAdminNavbar;

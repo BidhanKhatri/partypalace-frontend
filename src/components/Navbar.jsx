@@ -33,57 +33,26 @@ import ShowBooking from "./ShowBooking";
 import userContext from "../context/userContext";
 import SearchBar from "./SearchBar";
 import ProfileDropdown from "./ProfileDropdown";
+import PPLogo from "../assets/images/pp-logo.png";
 
 const PartyPalaceLogo = () => (
-  <svg
-    width="140"
-    height="32"
-    viewBox="0 0 140 32"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-auto"
-  >
-    {/* Party Palace Text with decorative elements */}
-    <defs>
-      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{ stopColor: "#fb923c", stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: "#ea580c", stopOpacity: 1 }} />
-      </linearGradient>
-    </defs>
-
-    {/* Balloons */}
-    <circle cx="8" cy="8" r="2.5" fill="url(#logoGradient)" />
-    <circle cx="132" cy="10" r="2.5" fill="url(#logoGradient)" />
-    <circle cx="135" cy="22" r="2" fill="#f97316" opacity="0.7" />
-
-    {/* Party hat */}
-    <path d="M 4 18 L 6 10 L 8 18 Z" fill="url(#logoGradient)" />
-
-    {/* Text */}
-    <text
-      x="16"
-      y="22"
-      fontFamily="Arial, sans-serif"
-      fontSize="14"
-      fontWeight="bold"
-      fill="url(#logoGradient)"
-      stroke="#ea580c"
-      strokeWidth="0.5"
-      letterSpacing="0.5"
-    >
-      PARTY PALACE
-    </text>
-
-    {/* Decorative line */}
-    <line
-      x1="16"
-      y1="26"
-      x2="130"
-      y2="26"
-      stroke="url(#logoGradient)"
-      strokeWidth="1"
+  <div className="flex items-center gap-2">
+    <img
+      src={PPLogo}
+      alt="Party Palace Logo"
+      className="
+        rounded-full
+        object-cover
+        
+        /* Much lower height */
+        w-16 h-8            /* mobile */
+        sm:w-20 sm:h-9      /* small devices */
+        md:w-24 md:h-10     /* tablets */
+        lg:w-28 lg:h-11     /* laptops */
+        xl:w-32 xl:h-12     /* desktops */
+      "
     />
-  </svg>
+  </div>
 );
 
 const Navbar = () => {

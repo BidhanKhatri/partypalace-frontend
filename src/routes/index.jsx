@@ -27,6 +27,12 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import PartypalaceMapLayout from "../layouts/PartypalaceMapLayout";
 import PartyPalaceMap from "../components/PartyPalaceMap";
 import FeedbackPage from "../pages/FeedbackPage";
+import Payments from "../adminPages/Payments";
+import SuperAdminLayout from "../layouts/SuperAdminLayout";
+import IsSuperAdminRoute from "./isSuperAdminRoute";
+import SuperAdminDashboard from "../superAdminPages/SuperAdminDashboard";
+import ListCategory from "../superAdminPages/ListCategory";
+import VerifyPalace from "../superAdminPages/VerifyPalace";
 
 const GoogleAuthWrapper = () => {
   return (
@@ -129,6 +135,35 @@ const router = createBrowserRouter([
           {
             path: "chat",
             element: <AdminChatPage />,
+          },
+          {
+            path: "payments",
+            element: <Payments />,
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    path: "/superadmin",
+    element: <IsSuperAdminRoute />,
+    children: [
+      {
+        path: "",
+        element: <SuperAdminLayout />,
+        children: [
+          {
+            path: "dashboard",
+            element: <SuperAdminDashboard />,
+          },
+          {
+            path: "list-category",
+            element: <ListCategory />,
+          },
+          {
+            path: "verify-palaces",
+            element: <VerifyPalace />,
           },
         ],
       },

@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-import { MapPin, Navigation, Zap, X } from "lucide-react";
+import {
+  MapPin,
+  Navigation,
+  Zap,
+  X,
+  DollarSign,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import api from "../utils/apiInstance";
+import { Link } from "react-router-dom";
 
 // Fix leaflet default icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -113,12 +122,10 @@ const RouteRenderer = ({ pathCoordinates }) => {
 
   useEffect(() => {
     if (pathCoordinates && pathCoordinates.length > 0) {
-      // Create a FeatureGroup to hold all route layers
       const routeGroup = L.featureGroup();
 
       pathCoordinates.forEach((segment) => {
         if (segment && segment.length > 0) {
-          // Draw polyline for each segment
           const polyline = L.polyline(segment, {
             color: "#3B82F6",
             weight: 4,
@@ -129,10 +136,8 @@ const RouteRenderer = ({ pathCoordinates }) => {
         }
       });
 
-      // Add to map
       routeGroup.addTo(map);
 
-      // Fit bounds to show the entire route
       if (routeGroup.getLayers().length > 0) {
         setTimeout(() => {
           map.fitBounds(routeGroup.getBounds(), {
@@ -193,22 +198,20 @@ const PartyPalaceMap = () => {
   const [nearestPalace, setNearestPalace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [searchType, setSearchType] = useState(null);
+  const [showSearchMenu, setShowSearchMenu] = useState(false);
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
 
-  // Request user location on component mount
   useEffect(() => {
     requestUserLocation();
     getAllPartyPalaces();
   }, []);
 
-  // Apply filters
   useEffect(() => {
     applyFilters();
   }, [partyPalaceData, filterCapacity, filterRating]);
 
-  // Cleanup watch on unmount
   useEffect(() => {
     return () => {
       if (watchIdRef.current) {
@@ -242,7 +245,6 @@ const PartyPalaceMap = () => {
   const getAllPartyPalaces = async () => {
     try {
       setLoading(true);
-
       const res = await api.get("/api/partypalace/get-all");
       if (res && res.data.success) {
         setPartyPalaceData(res.data.data || []);
@@ -278,7 +280,7 @@ const PartyPalaceMap = () => {
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
@@ -291,12 +293,9 @@ const PartyPalaceMap = () => {
     return R * c;
   };
 
-  // Fetch actual road route from OSRM API
   const fetchRoute = async (start, end) => {
     try {
-      // Using Open Source Routing Machine (OSRM) for real road routing
       const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?geometries=geojson&overview=full`;
-
       const response = await fetch(url);
       const data = await response.json();
 
@@ -314,16 +313,13 @@ const PartyPalaceMap = () => {
     return null;
   };
 
-  const zoomToNearest = async () => {
-    if (!userLocation || filteredData.length === 0) {
-      console.error("User location or palaces not available");
-      return;
-    }
+  // Algorithm: Greedy approach - Find nearest palace
+  const findNearest = () => {
+    if (!userLocation || filteredData.length === 0) return null;
 
     let nearest = null;
     let minDistance = Infinity;
 
-    // Find nearest palace
     filteredData.forEach((palace) => {
       if (
         palace.baseLocation &&
@@ -344,57 +340,272 @@ const PartyPalaceMap = () => {
       }
     });
 
-    if (nearest && mapRef.current) {
-      setIsAnimating(true);
-      setNearestPalace(nearest);
-      setSelectedPartyPalace(nearest._id);
+    return nearest;
+  };
 
-      // Fetch actual route through roads
-      const routeCoordinates = await fetchRoute(
+  // Algorithm: Multi-criteria optimization - Nearest AND Cheapest
+  // Uses weighted scoring: distance (normalized) + price (normalized)
+  const findNearestAndCheapest = () => {
+    if (!userLocation || filteredData.length === 0) return null;
+
+    const validPalaces = filteredData.filter(
+      (palace) =>
+        palace.baseLocation &&
+        palace.baseLocation.coordinates &&
+        palace.baseLocation.coordinates.length === 2 &&
+        palace.pricePerHour
+    );
+
+    if (validPalaces.length === 0) return null;
+
+    // Calculate distances and find min/max for normalization
+    const palacesWithMetrics = validPalaces.map((palace) => {
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        palace.baseLocation.coordinates[1],
+        palace.baseLocation.coordinates[0]
+      );
+      return { palace, distance, price: palace.pricePerHour };
+    });
+
+    const maxDistance = Math.max(...palacesWithMetrics.map((p) => p.distance));
+    const minDistance = Math.min(...palacesWithMetrics.map((p) => p.distance));
+    const maxPrice = Math.max(...palacesWithMetrics.map((p) => p.price));
+    const minPrice = Math.min(...palacesWithMetrics.map((p) => p.price));
+
+    // Normalize and calculate composite score (lower is better)
+    let bestPalace = null;
+    let bestScore = Infinity;
+
+    palacesWithMetrics.forEach(({ palace, distance, price }) => {
+      const normalizedDistance =
+        maxDistance !== minDistance
+          ? (distance - minDistance) / (maxDistance - minDistance)
+          : 0;
+      const normalizedPrice =
+        maxPrice !== minPrice ? (price - minPrice) / (maxPrice - minPrice) : 0;
+
+      // Weight: 50% distance, 50% price
+      const score = 0.5 * normalizedDistance + 0.5 * normalizedPrice;
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestPalace = palace;
+      }
+    });
+
+    return bestPalace;
+  };
+
+  // Algorithm: Multi-criteria optimization - Nearest AND Most Expensive
+  const findNearestAndExpensive = () => {
+    if (!userLocation || filteredData.length === 0) return null;
+
+    const validPalaces = filteredData.filter(
+      (palace) =>
+        palace.baseLocation &&
+        palace.baseLocation.coordinates &&
+        palace.baseLocation.coordinates.length === 2 &&
+        palace.pricePerHour
+    );
+
+    if (validPalaces.length === 0) return null;
+
+    const palacesWithMetrics = validPalaces.map((palace) => {
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        palace.baseLocation.coordinates[1],
+        palace.baseLocation.coordinates[0]
+      );
+      return { palace, distance, price: palace.pricePerHour };
+    });
+
+    const maxDistance = Math.max(...palacesWithMetrics.map((p) => p.distance));
+    const minDistance = Math.min(...palacesWithMetrics.map((p) => p.distance));
+    const maxPrice = Math.max(...palacesWithMetrics.map((p) => p.price));
+    const minPrice = Math.min(...palacesWithMetrics.map((p) => p.price));
+
+    // Normalize and calculate composite score (maximize price, minimize distance)
+    let bestPalace = null;
+    let bestScore = -Infinity;
+
+    palacesWithMetrics.forEach(({ palace, distance, price }) => {
+      const normalizedDistance =
+        maxDistance !== minDistance
+          ? (distance - minDistance) / (maxDistance - minDistance)
+          : 0;
+      const normalizedPrice =
+        maxPrice !== minPrice ? (price - minPrice) / (maxPrice - minPrice) : 0;
+
+      // Weight: minimize distance, maximize price
+      const score = -0.5 * normalizedDistance + 0.5 * normalizedPrice;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestPalace = palace;
+      }
+    });
+
+    return bestPalace;
+  };
+
+  // Algorithm: Max-Min approach - Farthest AND Cheapest
+  const findFarthestAndCheapest = () => {
+    if (!userLocation || filteredData.length === 0) return null;
+
+    const validPalaces = filteredData.filter(
+      (palace) =>
+        palace.baseLocation &&
+        palace.baseLocation.coordinates &&
+        palace.baseLocation.coordinates.length === 2 &&
+        palace.pricePerHour
+    );
+
+    if (validPalaces.length === 0) return null;
+
+    const palacesWithMetrics = validPalaces.map((palace) => {
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        palace.baseLocation.coordinates[1],
+        palace.baseLocation.coordinates[0]
+      );
+      return { palace, distance, price: palace.pricePerHour };
+    });
+
+    const maxDistance = Math.max(...palacesWithMetrics.map((p) => p.distance));
+    const minDistance = Math.min(...palacesWithMetrics.map((p) => p.distance));
+    const maxPrice = Math.max(...palacesWithMetrics.map((p) => p.price));
+    const minPrice = Math.min(...palacesWithMetrics.map((p) => p.price));
+
+    // Maximize distance, minimize price
+    let bestPalace = null;
+    let bestScore = -Infinity;
+
+    palacesWithMetrics.forEach(({ palace, distance, price }) => {
+      const normalizedDistance =
+        maxDistance !== minDistance
+          ? (distance - minDistance) / (maxDistance - minDistance)
+          : 0;
+      const normalizedPrice =
+        maxPrice !== minPrice ? (price - minPrice) / (maxPrice - minPrice) : 0;
+
+      // Weight: maximize distance, minimize price
+      const score = 0.5 * normalizedDistance - 0.5 * normalizedPrice;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestPalace = palace;
+      }
+    });
+
+    return bestPalace;
+  };
+
+  const displayRoute = async (palace, type) => {
+    if (!palace || !userLocation) return;
+
+    setIsAnimating(true);
+    setNearestPalace(palace);
+    setSelectedPartyPalace(palace._id);
+    setSearchType(type);
+
+    const routeCoordinates = await fetchRoute(
+      [userLocation.lat, userLocation.lng],
+      [palace.baseLocation.coordinates[1], palace.baseLocation.coordinates[0]]
+    );
+
+    if (routeCoordinates) {
+      setPathCoordinates(routeCoordinates);
+    } else {
+      const pathCoords = [
         [userLocation.lat, userLocation.lng],
         [
-          nearest.baseLocation.coordinates[1],
-          nearest.baseLocation.coordinates[0],
-        ]
-      );
-
-      if (routeCoordinates) {
-        setPathCoordinates(routeCoordinates);
-      } else {
-        // Fallback to direct line if route fetching fails
-        const pathCoords = [
-          [userLocation.lat, userLocation.lng],
-          [
-            nearest.baseLocation.coordinates[1],
-            nearest.baseLocation.coordinates[0],
-          ],
-        ];
-        setPathCoordinates([pathCoords]);
-      }
-
-      console.log(`Nearest palace: ${nearest.name}`);
-
-      // Auto zoom and fit bounds will be handled by RouteRenderer component
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 1500);
-    } else {
-      console.error("No palaces found");
+          palace.baseLocation.coordinates[1],
+          palace.baseLocation.coordinates[0],
+        ],
+      ];
+      setPathCoordinates([pathCoords]);
     }
+
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 1500);
+  };
+
+  const handleSearchOption = async (option) => {
+    let palace = null;
+
+    switch (option) {
+      case "nearest":
+        palace = findNearest();
+        if (palace) {
+          await displayRoute(palace, "nearest");
+        } else {
+          console.error("No palaces found");
+        }
+        break;
+      case "nearest-cheapest":
+        palace = findNearestAndCheapest();
+        if (palace) {
+          await displayRoute(palace, "nearest-cheapest");
+        } else {
+          console.error("No palaces with price found");
+        }
+        break;
+      case "nearest-expensive":
+        palace = findNearestAndExpensive();
+        if (palace) {
+          await displayRoute(palace, "nearest-expensive");
+        } else {
+          console.error("No palaces with price found");
+        }
+        break;
+      case "farthest-cheapest":
+        palace = findFarthestAndCheapest();
+        if (palace) {
+          await displayRoute(palace, "farthest-cheapest");
+        } else {
+          console.error("No palaces with price found");
+        }
+        break;
+      default:
+        break;
+    }
+
+    setShowSearchMenu(false);
   };
 
   const clearPath = () => {
     setPathCoordinates([]);
     setNearestPalace(null);
     setSelectedPartyPalace(null);
+    setSearchType(null);
+  };
+
+  const getSearchTypeLabel = () => {
+    switch (searchType) {
+      case "nearest":
+        return "Nearest Palace";
+      case "nearest-cheapest":
+        return "Nearest & Cheapest";
+      case "nearest-expensive":
+        return "Nearest & Premium";
+      case "farthest-cheapest":
+        return "Farthest & Cheapest";
+      default:
+        return "";
+    }
   };
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading party palaces...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-200 font-medium">Loading party palaces...</p>
         </div>
       </div>
     );
@@ -432,20 +643,6 @@ const PartyPalaceMap = () => {
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-          {/* <div>
-            <label className="text-xs sm:text-sm font-medium text-gray-700 block mb-1">
-              Min Rating
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              max="5"
-              value={filterRating}
-              onChange={(e) => setFilterRating(e.target.value)}
-              placeholder="0 - 5"
-              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-          </div> */}
           <button
             onClick={() => {
               setFilterCapacity("");
@@ -458,28 +655,120 @@ const PartyPalaceMap = () => {
         </div>
       </div>
 
-      {/* Map Controls - Mobile Responsive */}
-      <div className="fixed top-14 md:top-20 right-4 z-[1000] space-y-2">
-        <button
-          onClick={zoomToNearest}
-          disabled={isAnimating}
-          className="bg-blue-600 p-2 sm:p-2.5 text-white rounded-md flex items-center gap-1 sm:gap-2 cursor-pointer hover:bg-blue-700 disabled:bg-blue-400 transition-all text-xs sm:text-sm font-medium"
-          title="Find nearest party palace with auto path"
-        >
-          <Zap size={16} />
-          <span className="hidden sm:inline">Nearest</span>
-        </button>
+      {/* Map Controls - Messenger-style Popup Menu */}
+      <div className="fixed top-14 md:top-20 right-4 z-[1000]">
+        {/* Options Menu - appears when showSearchMenu is true */}
+        {showSearchMenu && (
+          <div className="absolute top-12 right-0 bg-white lg:w-64 rounded-lg shadow-2xl overflow-hidden mb-2 animate-scale-in">
+            <div className="py-2">
+              <button
+                onClick={() => handleSearchOption("nearest")}
+                disabled={isAnimating}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition-colors disabled:opacity-50 text-left"
+              >
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Zap size={18} className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 text-sm">Nearest</p>
+                  <p className="text-xs text-gray-500">Find closest palace</p>
+                </div>
+              </button>
 
-        {pathCoordinates.length > 0 && (
-          <button
-            onClick={clearPath}
-            className="bg-red-600 p-2 text-white rounded-md flex items-center gap-1 sm:gap-2 cursor-pointer hover:bg-red-700 transition-all text-xs sm:text-sm font-medium"
-          >
-            <X size={16} />
-            <span className="hidden sm:inline">Clear</span>
-          </button>
+              <button
+                onClick={() => handleSearchOption("nearest-cheapest")}
+                disabled={isAnimating}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-green-50 transition-colors disabled:opacity-50 text-left"
+              >
+                <div className="p-2 bg-green-100 rounded-full">
+                  <TrendingDown size={18} className="text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 text-sm">
+                    Near + Cheap
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Balanced budget option
+                  </p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleSearchOption("nearest-expensive")}
+                disabled={isAnimating}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-purple-50 transition-colors disabled:opacity-50 text-left"
+              >
+                <div className="p-2 bg-purple-100 rounded-full">
+                  <TrendingUp size={18} className="text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 text-sm">
+                    Near + Premium
+                  </p>
+                  <p className="text-xs text-gray-500">Luxury nearby</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleSearchOption("farthest-cheapest")}
+                disabled={isAnimating}
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-orange-50 transition-colors disabled:opacity-50 text-left"
+              >
+                <div className="p-2 bg-orange-100 rounded-full">
+                  <DollarSign size={18} className="text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 text-sm">
+                    Far + Cheap
+                  </p>
+                  <p className="text-xs text-gray-500">Best savings</p>
+                </div>
+              </button>
+            </div>
+          </div>
         )}
+
+        {/* Main Toggle Button */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSearchMenu(!showSearchMenu)}
+            className={`${
+              showSearchMenu
+                ? "bg-purple-600"
+                : "bg-gradient-to-r from-purple-600 to-blue-600"
+            } p-3 text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95`}
+            title="Search options"
+          >
+            {showSearchMenu ? <X size={24} /> : <Zap size={24} />}
+          </button>
+
+          {pathCoordinates.length > 0 && (
+            <button
+              onClick={clearPath}
+              className="bg-red-600 p-3 text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95"
+              title="Clear route"
+            >
+              <X size={24} />
+            </button>
+          )}
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes scale-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.9) translateY(10px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        .animate-scale-in {
+          animation: scale-in 0.2s ease-out forwards;
+        }
+      `}</style>
 
       {/* Map Container */}
       <div className="w-full h-full">
@@ -496,15 +785,12 @@ const PartyPalaceMap = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* Render actual route through roads */}
             {pathCoordinates.length > 0 && (
               <RouteRenderer pathCoordinates={pathCoordinates} />
             )}
 
-            {/* Animated User Location Marker */}
             {userLocation && <AnimatedUserMarker position={userLocation} />}
 
-            {/* Party Palace Markers */}
             {filteredData.map((palace) => {
               if (
                 !palace.baseLocation ||
@@ -529,7 +815,6 @@ const PartyPalaceMap = () => {
                 >
                   <Popup minWidth={280} maxWidth={320}>
                     <div className="p-2 sm:p-3">
-                      {/* Header */}
                       <div className="flex items-center space-x-2 sm:space-x-3 mb-3">
                         {palace.images && palace.images[0] && (
                           <img
@@ -553,7 +838,6 @@ const PartyPalaceMap = () => {
                         </div>
                       </div>
 
-                      {/* Details */}
                       <div className="space-y-1 sm:space-y-2 mb-3 text-xs sm:text-sm">
                         {palace.capacity && (
                           <div className="flex items-center space-x-2">
@@ -593,11 +877,14 @@ const PartyPalaceMap = () => {
                           )}
                       </div>
 
-                      {/* Action Buttons */}
                       <div className="flex space-x-2 gap-2">
-                        <button className="flex-1 bg-purple-600 text-white py-1.5 sm:py-2 px-2 sm:px-3 rounded-md text-xs font-medium hover:bg-purple-700 transition-colors">
-                          Book
-                        </button>
+                        <Link
+                          to={`/booking/${palace._id}`}
+                          className="flex flex-1 items-center justify-center bg-purple-600 text-white py-1.5 sm:py-2 px-2 sm:px-3 rounded-md text-xs font-medium hover:bg-purple-700 transition-colors"
+                        >
+                          <span className="text-white">Book</span>
+                        </Link>
+
                         <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 sm:py-2 px-2 sm:px-3 rounded-md text-xs font-medium hover:bg-gray-200 transition-colors">
                           Details
                         </button>
@@ -609,8 +896,11 @@ const PartyPalaceMap = () => {
             })}
           </MapContainer>
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-200">
-            <p className="text-gray-600 font-medium">Loading map...</p>
+          <div className="w-full h-screen flex items-center justify-center bg-slate-950">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-200 font-medium">Loading Map...</p>
+            </div>
           </div>
         )}
       </div>
@@ -637,15 +927,20 @@ const PartyPalaceMap = () => {
       {/* Auto Path Status */}
       {isAnimating && (
         <div className="fixed bottom-4 right-4 z-[1000] bg-blue-100 border-2 border-blue-500 rounded-lg p-2 sm:p-3 max-w-xs text-xs sm:text-sm">
-          <p className="text-blue-800 font-medium">Finding nearest palace...</p>
+          <p className="text-blue-800 font-medium">Finding palace...</p>
         </div>
       )}
 
       {nearestPalace && !isAnimating && pathCoordinates.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[1000] bg-green-100 border-2 border-green-500 rounded-lg p-2 sm:p-3 max-w-xs text-xs sm:text-sm">
           <p className="text-green-800 font-medium">
-            Route to {nearestPalace.name}
+            {getSearchTypeLabel()}: {nearestPalace.name}
           </p>
+          {nearestPalace.pricePerHour && (
+            <p className="text-green-700 text-xs mt-1">
+              Rs. {nearestPalace.pricePerHour}/hour
+            </p>
+          )}
         </div>
       )}
     </div>
